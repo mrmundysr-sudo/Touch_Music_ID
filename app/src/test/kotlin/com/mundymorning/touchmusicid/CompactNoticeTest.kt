@@ -5,7 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.test.assertHeightIsAtMost
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -17,6 +17,7 @@ import com.mundymorning.touchmusicid.design.CompactNotice
 import com.mundymorning.touchmusicid.design.TmiButton
 import com.mundymorning.touchmusicid.design.TouchMusicIdTheme
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -46,7 +47,8 @@ class CompactNoticeTest {
         compose.onNodeWithText("Check again").assertIsDisplayed().performClick()
         assertEquals(1, searched); assertEquals(1, retried)
         // The old EmptyState placeholder alone was a 160 dp circle plus padding (>300 dp). The whole notice must stay small.
-        compose.onNodeWithTag("notice").assertHeightIsAtMost(190.dp)
+        val h = compose.onNodeWithTag("notice").getUnclippedBoundsInRoot().height
+        assertTrue("notice is $h tall", h <= 190.dp)
     }
 
     @Test fun failedLookupVariantHasASingleRetryAction() {
@@ -63,6 +65,7 @@ class CompactNoticeTest {
         compose.onNodeWithText("Wikipedia isn't responding").assertIsDisplayed()
         compose.onNodeWithText("Retry").performClick()
         assertEquals(1, retried)
-        compose.onNodeWithTag("notice").assertHeightIsAtMost(170.dp)
+        val h = compose.onNodeWithTag("notice").getUnclippedBoundsInRoot().height
+        assertTrue("notice is $h tall", h <= 170.dp)
     }
 }
