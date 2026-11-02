@@ -1,50 +1,22 @@
-# [App Name] — Product Vision
+# Touch Music ID — Product Vision
+Status: Approved for initial Android APK development, 2026-11-01.
 
-> Status: Draft / Brainstorming. Nothing in this file authorizes implementation.
+## Promise
+Hear a song, identify it, discover its story. A polished, Android-first music recognition and factual discovery app for Mundy Morning Studios.
 
-## Product identity
-- **Working name:** [Name]
-- **Mundy Morning Studios**
-- **One-sentence promise:** [What the app does]
-- **Audience:** [Who benefits]
-- **Problem:** [What problem is solved]
-- **Distinctive advantage:** [Why this app]
+## User experience
+One-tap listening -> accurate recognition result -> song/artist/album -> verified Wikipedia and Wikidata artist/music facts -> outbound Apple Music, Spotify, and YouTube links -> save to local history/favorites -> share.
 
-## Confirmed decisions
-- [ ] [Only decisions explicitly approved by product owner]
+## Differentiator
+Song recognition is the entry point; the ongoing discovery experience is the product. Avoid making a simple Shazam clone. Provide useful, cited factual context and handle ambiguous artist matches honestly.
 
-## Proposed features (not approved)
-- [ ] [Idea and user value]
+## Scope
+Official ShazamKit for Android integration where currently supported, with developer credentials supplied later. Wikipedia/Wikidata live integration, cache and attribution, history/favorites, original professional UI, privacy-forward microphone permissions, clear loading/permission/offline/error states. Optional daily unlock monetization architecture; no actual ads or payments required for first APK.
 
-## User journeys
-1. **First-time user:** [steps]
-2. **Core repeat use:** [steps]
-3. **Failure/recovery:** [steps]
+## Visual production
+High-quality first-pass interface with replaceable asset slots, centralized theme tokens, asset manifest, scalable layouts, original iconography. Later art direction uses 720x1600 portrait assets without rewiring business logic.
 
-## Platform and UX
-- Android-first, phone-friendly.
-- Accessibility, offline behavior, privacy, and export requirements: [define per app].
-- Design direction: [describe].
+## Guardrails
+Do not ship Apple private signing keys, API secrets, copyrighted album art bundles, or copied Shazam branding. Clearly distinguish test/demo recognition from actual ShazamKit recognition. Target 95%+ accuracy as a future measured goal, not a guarantee. Do not imply verified live recognition without real device/token testing.
 
-## Reuse from existing apps
-- **Candidate modules:** [Touch Toolkit, Touch Reader, Touch Personal AI, etc.]
-- **Verification required:** audit source, licenses, compatibility and performance before reuse.
-
-## Monetization and trust
-- Free baseline and optional monetization: [decision].
-- User data ownership, consent, privacy: [decision].
-
-## First release (MVP)
-- In scope: [approved]
-- Out of scope: [approved]
-- Success criteria: [testable]
-
-## Long-term opportunities
-- [Future possibilities, explicitly not current requirements]
-
-## Open questions
-- [Question] — Owner: [name] — Status: unresolved
-
-## Approval
-- **Product vision approved:** No
-- **Approved by / date:** [pending]
+See MUSIC_ID_BUILD_BRIEF.md and CLAUDE.md.
