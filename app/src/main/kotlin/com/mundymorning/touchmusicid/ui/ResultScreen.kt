@@ -145,7 +145,7 @@ private fun LinkRow(item: LibrarySong) {
                     if (!ExternalLinks.open(ctx, ExternalLinks.url(svc, item.song))) {
                         Toast.makeText(ctx, "Couldn't open ${svc.label}", Toast.LENGTH_SHORT).show()
                     }
-                }, Modifier.weight(1f), primary = false)
+                }, Modifier.weight(1f), primary = false, compact = true)
             }
         }
         Text(

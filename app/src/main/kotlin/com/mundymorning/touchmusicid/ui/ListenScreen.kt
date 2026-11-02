@@ -36,6 +36,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
+import kotlinx.coroutines.delay
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mundymorning.touchmusicid.design.AssetSlot
 import com.mundymorning.touchmusicid.design.ButtonPhase
@@ -95,8 +96,16 @@ fun ListenScreen(vm: MainViewModel, onOpenHelp: () -> Unit) {
         else -> "Identify a song, then explore its story."
     }
 
+    // When a status card appears below the fold, bring it (and its buttons) into view.
+    val scroll = rememberScrollState()
+    val showsCard = state is ListenState.Unavailable || state is ListenState.PermissionDenied ||
+        state is ListenState.NoMatch || state is ListenState.Error
+    LaunchedEffect(state) {
+        if (showsCard) { delay(80); scroll.scrollTo(scroll.maxValue) }
+    }
+
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = TmiDims.ScreenPadding),
+        Modifier.fillMaxSize().verticalScroll(scroll).padding(horizontal = TmiDims.ScreenPadding),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Spacer(Modifier.height(16.dp))
@@ -155,8 +164,8 @@ private fun StatusCard(state: ListenState, vm: MainViewModel, onOpenHelp: () -> 
                 style = MaterialTheme.typography.bodyMedium, color = TmiColors.TextMedium,
             )
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                TmiButton("Use Demo mode", { vm.setDemoMode(true); vm.dismissListenMessage(); vm.onListenTapped() }, Modifier.weight(1f))
-                TmiButton("Setup guide", { vm.dismissListenMessage(); onOpenHelp() }, Modifier.weight(1f), primary = false)
+                TmiButton("Try demo mode", { vm.setDemoMode(true); vm.dismissListenMessage(); vm.onListenTapped() }, Modifier.weight(1f), compact = true)
+                TmiButton("Setup guide", { vm.dismissListenMessage(); onOpenHelp() }, Modifier.weight(1f), primary = false, compact = true)
             }
         }
         is ListenState.PermissionDenied -> GlassCard {

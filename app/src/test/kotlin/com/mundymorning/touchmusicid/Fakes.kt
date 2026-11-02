@@ -81,3 +81,36 @@ class FakeWiki(
         }
     }
 }
+
+/** Shared Queen / Bohemian Rhapsody fixture used by UI-flow tests. */
+object QueenWorld {
+    fun build(): FakeWiki {
+        val queen = entityJson(
+            "Q15862", "Queen", "British rock band",
+            claims = mapOf(
+                "P31" to listOf("Q5741069"), "P434" to listOf("mbid"), "P136" to listOf("Q11399"),
+                "P571" to listOf(com.mundymorning.touchmusicid.knowledge.ClaimValue.Time("+1970-00-00T00:00:00Z", 9)), "P740" to listOf("Q84"),
+            ),
+            enwiki = "Queen (band)",
+        )
+        val song = entityJson(
+            "Q187655", "Bohemian Rhapsody", "1975 song by Queen",
+            claims = mapOf(
+                "P31" to listOf("Q7366"), "P175" to listOf("Q15862"), "P361" to listOf("Q207"),
+                "P577" to listOf(com.mundymorning.touchmusicid.knowledge.ClaimValue.Time("+1975-10-31T00:00:00Z", 11)),
+            ),
+            enwiki = "Bohemian Rhapsody",
+        )
+        return FakeWiki(
+            db = listOf(queen, song, entityJson("Q11399", "rock music"), entityJson("Q84", "London"), entityJson("Q207", "A Night at the Opera")).associateBy { it.getString("id") },
+            entitySearch = mapOf(
+                "Queen" to searchJson(Triple("Q15862", "Queen", "British rock band")),
+                "Bohemian Rhapsody" to searchJson(Triple("Q187655", "Bohemian Rhapsody", "1975 song by Queen")),
+            ),
+            summaries = mapOf(
+                "Queen_(band)" to summaryJson("Queen (band)", "Queen are a British rock band formed in London in 1970. Their classic line-up was Freddie Mercury, Brian May, Roger Taylor and John Deacon.", "British rock band"),
+                "Bohemian_Rhapsody" to summaryJson("Bohemian Rhapsody", "\"Bohemian Rhapsody\" is a song by the British rock band Queen. It was written by Freddie Mercury for the band's 1975 album A Night at the Opera."),
+            ),
+        )
+    }
+}

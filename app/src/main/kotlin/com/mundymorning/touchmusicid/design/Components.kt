@@ -101,18 +101,19 @@ fun Pill(text: String, color: Color, modifier: Modifier = Modifier) {
 @Composable
 fun TmiButton(
     text: String, onClick: () -> Unit, modifier: Modifier = Modifier,
-    icon: ImageVector? = null, primary: Boolean = true, enabled: Boolean = true,
+    icon: ImageVector? = null, primary: Boolean = true, enabled: Boolean = true, compact: Boolean = false,
 ) {
+    val padding = if (compact) PaddingValues(horizontal = 6.dp, vertical = 8.dp) else ButtonDefaults.ContentPadding
     val content: @Composable () -> Unit = {
         if (icon != null) { Icon(icon, null, Modifier.size(20.dp)); Spacer(Modifier.width(8.dp)) }
         Text(text, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
     val m = modifier.defaultMinSize(minHeight = TmiDims.MinTouch)
     if (primary) {
-        Button(onClick, m, enabled, colors = ButtonDefaults.buttonColors(containerColor = TmiColors.Primary, contentColor = TmiColors.OnPrimary), content = { content() })
+        Button(onClick, m, enabled, contentPadding = padding, colors = ButtonDefaults.buttonColors(containerColor = TmiColors.Primary, contentColor = TmiColors.OnPrimary), content = { content() })
     } else {
         OutlinedButton(
-            onClick, m, enabled, border = BorderStroke(1.dp, TmiColors.Outline),
+            onClick, m, enabled, contentPadding = padding, border = BorderStroke(1.dp, TmiColors.Outline),
             colors = ButtonDefaults.outlinedButtonColors(contentColor = TmiColors.TextHigh), content = { content() },
         )
     }

@@ -136,7 +136,7 @@ class KnowledgeResolver(private val api: WikiApi) {
         val summary = e.enwikiTitle?.let { api.summary(it) }?.takeUnless { it.isDisambiguation }
         return EntityKnowledge(
             qid = e.id,
-            name = summary?.title ?: e.label ?: songArtist.orEmpty(),
+            name = e.label ?: summary?.title ?: songArtist.orEmpty(),
             description = e.description ?: summary?.description,
             extract = summary?.extract,
             wikipediaUrl = summary?.url,
