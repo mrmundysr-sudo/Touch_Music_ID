@@ -88,10 +88,15 @@ class LookupDiagnosticsLiveTest {
                 }
             }
         }
-        var apiErrorEvents = 0; var finalFailures = 0
+        // Pace requests: an unpaced run (the previous attempt) trips Wikidata's per-IP rate limit (HTTP 429, Retry-After 6-8 s), which
+        // measures the diagnostic's own traffic, not the app's (about five requests per song).
+        val paceMs = (System.getenv("LIVE_DIAG_PACE_MS") ?: "2500").toLong(); val passGapMs = (System.getenv("LIVE_DIAG_PASS_GAP_MS") ?: "30000").toLong()
+        var apiErrorEvents = 0; var rateLimited = 0; var absorbed = 0; var finalFailures = 0
         val results = LinkedHashMap<String, MutableList<String>>()
         for (pass in 1..3) {
+            if (pass > 1) Thread.sleep(passGapMs)
             for (name in artists) {
+                Thread.sleep(paceMs)
                 val rec = Recording(UrlConnectionFetcher())
                 val api = WikiApi(rec); val resolver = KnowledgeResolver(api)
                 if (pass == 1) {
@@ -121,7 +126,9 @@ class LookupDiagnosticsLiveTest {
                 val evs = rec.drain()
                 val bad = evs.filter { it.kind != "OK" }
                 apiErrorEvents += bad.count { it.kind == "API_ERROR" }
+                rateLimited += bad.count { it.kind == "HTTP_429" }
                 val s = statusOf(lookup, err)
+                if (bad.isNotEmpty() && s.startsWith("VERIFIED")) absorbed++
                 if (err != null) finalFailures++
                 results.getOrPut(name) { mutableListOf() } += s
                 println("DIAG  PRODUCTION resolveArtist pass $pass: $s${if (bad.isNotEmpty()) "  NON-OK EVENTS: ${fmt(bad)}" else ""}")
@@ -141,7 +148,7 @@ class LookupDiagnosticsLiveTest {
         val notVerified = results.filter { !it.value.all { s -> s.startsWith("VERIFIED") } }.keys
         val required = listOf("Morgan Wallen", "Beyoncé", "Post Malone", "Kendrick Lamar", "The Weeknd", "Bad Bunny")
         println("DIAGSUM required six VERIFIED in every pass: ${required.associateWith { n -> results[n]!!.all { it.startsWith("VERIFIED") } }}")
-        println("DIAGSUM wikidata error responses seen during production lookups (each retried up to twice): $apiErrorEvents ; lookups that still ended LOOKUP_FAILED: $finalFailures")
+        println("DIAGSUM production lookups: ${results.size * 3}; Wikidata 'too busy' error bodies: $apiErrorEvents; HTTP 429 responses: $rateLimited; lookups with a transient error that the retry absorbed (ended VERIFIED): $absorbed; ended LOOKUP_FAILED: $finalFailures; ended NOT_FOUND: ${results.values.sumOf { l -> l.count { it == "NOT_FOUND" } }}")
         println("DIAGSUM flaky artists: ${flaky.ifEmpty { listOf("none") }}")
         println("DIAGSUM not VERIFIED in every pass: ${notVerified.ifEmpty { listOf("none") }}")
     }
