@@ -13,6 +13,10 @@
 - Recommended starting ref for the next task: `claude/touch-music-id-first-build`
 - Current approved task: first Android debug APK (done pending owner phone test). Phase 2 (real recognition) is **not** approved yet
 
+## Update 2026-11-02 (ShazamKit integration)
+- Branch `claude/bold-pascal-nrecdm` (base `claude/touch-music-id-first-build` @ `fa4c669`), source commit `86f6dde`, no PR, nothing merged.
+- CI run [#10](https://github.com/mrmundysr-sudo/Touch_Music_ID/actions/runs/41405843736): Unit tests, Debug APK and live Wikipedia smoke all **success**. APK artifact `Touch-Music-ID-debug-10` exists but was **not downloaded** (artifact host blocked in the authoring sandbox). Live recognition **untested**.
+
 ## CI evidence
 | Run | Commit | Result |
 |---|---|---|

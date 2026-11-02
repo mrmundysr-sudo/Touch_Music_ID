@@ -1,6 +1,6 @@
 # ShazamKit for Android: what is done, what is blocked, exact steps
 
-**Status of this build: live recognition is NOT working and has NOT been tested.** The app contains the full
+**Status (updated 2026-11-02): the real ShazamKit 2.1.1 engine is implemented and compiles in CI with the AAR, but live recognition has NOT been tested** (no token service, no real-device run). The "adapter template" and step 4 below are superseded: the adapter is `app/src/shazamkit/`, enabled automatically when `app/libs/shazamkit-android-release.aar` exists. The app contains the full
 recognition architecture and an honest "not configured" state. It never fabricates a match. Demo mode returns clearly
 labelled example songs and does not listen.
 

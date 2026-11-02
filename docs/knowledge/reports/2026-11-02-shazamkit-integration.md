@@ -1,0 +1,12 @@
+# Work report — ShazamKit 2.1.1 integration — 2026-11-02
+
+- Repository / branch / base commit / final commit: mrmundysr-sudo/Touch_Music_ID, `claude/bold-pascal-nrecdm`, base `claude/touch-music-id-first-build` @ `fa4c669`, source commit `86f6dde` (docs-only commit follows)
+- Owner request: replace demo-only recognition with real ShazamKit 2.1.1 recognition; real artwork; secure token design; keep UI/Wikipedia/links; no secrets in repo/APK.
+- Out of scope (untouched): monetisation, subscription, unrelated screens, visual design.
+- Knowledge/registry consulted: docs/knowledge, SHAZAMKIT_SETUP, TOKEN_SERVICE. Touch-Modules registry not consulted (not attached to this session).
+- What changed: `recognition/ShazamKitEngine.kt` (SDK-free state logic), `Capture.kt`/`AudioRecordCapture.kt` (mic, released in finally), `MatchBackend.kt` (SDK boundary), `src/shazamkit/.../ShazamKitBindings.kt` (only SDK-touching code, compiled only when the AAR is present), `net/Artwork.kt` + `AlbumArtBox` (real cover, trusted https hosts, fallback), new `SILENCE` failure, Gradle/ProGuard AAR wiring, CI AAR placement, `backend/token-service/` reference service.
+- Tests actually run: CI run 10 (https://github.com/mrmundysr-sudo/Touch_Music_ID/actions/runs/41405843736), commit `86f6dde`: Unit tests success (log shows AAR placed and BUILD SUCCESSFUL), Debug APK success, live Wikipedia smoke success. Token service: `node --test backend/token-service` 3/3 pass locally. Per-test counts not read.
+- Delivered APK: **not attached.** Sandbox network policy blocks `productionresultssa8.blob.core.windows.net` (GitHub artifact storage), so the CI APK could not be downloaded; local build blocked by Maven Central HTTP 429. Artifact `Touch-Music-ID-debug-10` exists in the run.
+- Not tested / blocked: **no real recognition has ever run** (needs deployed token service + real phone + real music); microphone on a device; accuracy (DEC-010); the JWT header/claims in the reference service are unverified against Apple's guide; AAR licence/redistribution (the transfer zip is on public main).
+- Regressions checked: existing unit suite passes in CI; the old "SDK absent from classpath" test replaced by "BuildConfig flag matches classpath".
+- Next steps: deploy token service; set repo variable TOKEN_SERVICE_URL; install the CI APK on a phone and test quiet/noisy/silence/offline/permission-denied; verify token claims; decide AAR licensing.

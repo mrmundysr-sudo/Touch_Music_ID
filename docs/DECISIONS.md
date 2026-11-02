@@ -28,3 +28,5 @@ These were made by Claude while building within the approved scope. They are **P
 
 Still open (unchanged): exact ShazamKit SDK licence/redistribution, token-service hosting and attestation, privacy disclosure wording (draft in `docs/PRIVACY.md`), release monetisation, whether a free Apple ID can create the media identifier/key.
 
+
+- DEC-019 Proposed: Real engine uses ShazamKit streaming sessions (first match wins, 12 s mic budget, silence reported separately). SDK types live only in `src/shazamkit`; builds without the AAR still work. Token claims in `backend/token-service` are unverified against Apple. Artwork loads only from https Apple/Shazam hosts.
