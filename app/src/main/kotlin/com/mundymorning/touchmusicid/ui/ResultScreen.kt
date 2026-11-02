@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
@@ -23,10 +22,15 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -58,8 +62,11 @@ import com.mundymorning.touchmusicid.knowledge.Lookup
 import com.mundymorning.touchmusicid.knowledge.MatchStatus
 import com.mundymorning.touchmusicid.links.ExternalLinks
 import com.mundymorning.touchmusicid.links.Service
+import com.mundymorning.touchmusicid.lyrics.LyricsUiState
 import java.text.DateFormat
 import java.util.Date
+
+private enum class ResultTab { ArtistWiki, SongWiki, Lyrics }
 
 @Composable
 fun ResultScreen(vm: MainViewModel, songKey: String, onBack: () -> Unit) {
@@ -68,6 +75,7 @@ fun ResultScreen(vm: MainViewModel, songKey: String, onBack: () -> Unit) {
     val favorites by vm.favorites.collectAsStateWithLifecycle()
     val ctx = LocalContext.current
     val current = ui?.takeIf { it.item.song.key == songKey }
+    var tab by remember { mutableIntStateOf(0) }
 
     Column(Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -101,17 +109,83 @@ fun ResultScreen(vm: MainViewModel, songKey: String, onBack: () -> Unit) {
         ) {
             item { Header(current.item) }
             item { LinkRow(current.item) }
-            when (val k = current.knowledge) {
-                KnowledgeUi.Loading -> item { LoadingCard() }
-                is KnowledgeUi.Error -> item { ErrorCard(k.kind, onRetry = vm::retryKnowledge) }
-                is KnowledgeUi.Ready -> {
-                    if (k.freshness == Freshness.CACHE_STALE_OFFLINE) item { OfflineBanner(k.bundle.fetchedAtMillis, vm::retryKnowledge) }
-                    item { LookupSection("About the artist", song.artist, k.bundle.artist, vm::chooseArtist, vm::retryKnowledge) }
-                    item { LookupSection("About the song", song.title, k.bundle.song, null, vm::retryKnowledge) }
-                    item { SourcesCard(k.bundle) }
+            item {
+                TabRow(selectedTabIndex = tab) {
+                    ResultTab.entries.forEachIndexed { i, t ->
+                        Tab(
+                            selected = tab == i,
+                            onClick = { tab = i },
+                            text = {
+                                Text(
+                                    when (t) {
+                                        ResultTab.ArtistWiki -> "Artist Wiki"
+                                        ResultTab.SongWiki -> "Song Wiki"
+                                        ResultTab.Lyrics -> "Lyrics"
+                                    }
+                                )
+                            },
+                        )
+                    }
                 }
             }
+            when (ResultTab.entries[tab]) {
+                ResultTab.ArtistWiki -> {
+                    when (val k = current.knowledge) {
+                        KnowledgeUi.Loading -> item { LoadingCard() }
+                        is KnowledgeUi.Error -> item { ErrorCard(k.kind, onRetry = vm::retryKnowledge) }
+                        is KnowledgeUi.Ready -> {
+                            if (k.freshness == Freshness.CACHE_STALE_OFFLINE) item { OfflineBanner(k.bundle.fetchedAtMillis, vm::retryKnowledge) }
+                            item { LookupSection("About the artist", song.artist, k.bundle.artist, vm::chooseArtist, vm::retryKnowledge) }
+                            item { SourcesCard(k.bundle) }
+                        }
+                    }
+                }
+                ResultTab.SongWiki -> {
+                    when (val k = current.knowledge) {
+                        KnowledgeUi.Loading -> item { LoadingCard() }
+                        is KnowledgeUi.Error -> item { ErrorCard(k.kind, onRetry = vm::retryKnowledge) }
+                        is KnowledgeUi.Ready -> {
+                            item { LookupSection("About the song", song.title, k.bundle.song, null, vm::retryKnowledge) }
+                            item { SourcesCard(k.bundle) }
+                        }
+                    }
+                }
+                ResultTab.Lyrics -> item { LyricsTab(current.lyrics, vm::loadLyrics, vm::importLocalLrc) }
+            }
             item { Spacer(Modifier.height(16.dp)) }
+        }
+    }
+}
+
+@Composable
+private fun LyricsTab(state: LyricsUiState, onLoad: () -> Unit, onImport: (String) -> Unit) {
+    GlassCard {
+        Text("Lyrics", style = MaterialTheme.typography.titleMedium, color = TmiColors.TextHigh, modifier = Modifier.semantics { heading() })
+        when (state) {
+            LyricsUiState.Idle -> {
+                Text("Lyrics are optional. Load online (if enabled) or import a local LRC file.", style = MaterialTheme.typography.bodyMedium, color = TmiColors.TextMedium)
+                TmiButton("Load lyrics", onLoad, Modifier.fillMaxWidth())
+            }
+            LyricsUiState.Loading -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                CircularProgressIndicator(Modifier.size(24.dp), color = TmiColors.Primary, strokeWidth = 2.5.dp)
+                Text("Loading lyrics…", style = MaterialTheme.typography.bodyMedium, color = TmiColors.TextMedium)
+            }
+            LyricsUiState.Disabled -> {
+                Text("Online lyrics are off. You can still import a local LRC file for this song.", style = MaterialTheme.typography.bodyMedium, color = TmiColors.TextMedium)
+                TmiButton("Import local LRC", { /* file picker to be wired; placeholder */ }, Modifier.fillMaxWidth(), primary = false)
+            }
+            is LyricsUiState.Unavailable -> {
+                Text(state.message, style = MaterialTheme.typography.bodyMedium, color = TmiColors.Warm)
+                TmiButton("Try again", onLoad, Modifier.fillMaxWidth(), primary = false)
+            }
+            is LyricsUiState.Ready -> {
+                val r = state.result
+                if (r.instrumental) Text("Instrumental — no lyrics", style = MaterialTheme.typography.bodyMedium, color = TmiColors.TextMedium)
+                else {
+                    Text(r.plain ?: r.syncedLines.joinToString("\n") { it.text }, style = MaterialTheme.typography.bodyLarge, color = TmiColors.TextHigh)
+                    Pill(if (r.source == "local") "Local LRC" else "From LRCLIB", TmiColors.Accent)
+                }
+            }
         }
     }
 }
@@ -143,7 +217,6 @@ private fun LinkRow(item: LibrarySong) {
             Service.entries.forEach { svc ->
                 TmiButton(svc.label, {
                     if (svc == Service.SPOTIFY) {
-                        // Spotify often ignores the query, so make pasting it one gesture away.
                         ExternalLinks.copySearchText(ctx, item.song)?.let {
                             Toast.makeText(ctx, "Copied “$it”. If Spotify's search is empty, paste it.", Toast.LENGTH_LONG).show()
                         }
@@ -160,7 +233,7 @@ private fun LinkRow(item: LibrarySong) {
             "Links open a search for this song. Availability depends on each service.",
             style = MaterialTheme.typography.bodySmall, color = TmiColors.TextLow,
         )
-        DebugLabEntry() // debug builds only; emits nothing in release
+        DebugLabEntry()
     }
 }
 
