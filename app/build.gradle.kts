@@ -43,6 +43,14 @@ android {
     }
     testOptions {
         unitTests.isIncludeAndroidResources = true
+        // Optional: run Robolectric offline from a pre-fetched android-all jar directory (-ProbolectricDir=...).
+        val offlineDir = project.findProperty("robolectricDir") as String?
+        if (offlineDir != null) {
+            unitTests.all {
+                it.systemProperty("robolectric.offline", "true")
+                it.systemProperty("robolectric.dependency.dir", offlineDir)
+            }
+        }
     }
     packaging { resources.excludes += "/META-INF/{AL2.0,LGPL2.1}" }
 }

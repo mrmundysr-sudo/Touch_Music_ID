@@ -61,7 +61,7 @@ class RecognitionController(
     /** Call with the outcome of the OS permission dialog. Ignored unless we asked for it. */
     fun onPermissionResult(granted: Boolean, permanentlyDenied: Boolean) {
         if (_state.value != ListenState.NeedsPermission) return
-        if (granted) start() else _state.value = ListenState.PermissionDenied(permanentlyDenied)
+        if (granted) run(engine()) else _state.value = ListenState.PermissionDenied(permanentlyDenied)
     }
 
     /** Stops capture immediately (also call when the app leaves the foreground). */
