@@ -164,7 +164,8 @@ class RecognitionControllerTest {
         assertSame(real, p.current(demoEnabled = true))
     }
 
-    @Test fun shazamKitAbsentFromThisBuildClasspath() {
-        assertFalse("This build must not link the SDK it cannot verify", isShazamKitOnClasspath())
+    @Test fun sdkLinkedFlagMatchesClasspath() {
+        assertEquals("BuildConfig.SHAZAMKIT_LINKED must reflect whether the AAR is actually on the classpath",
+            BuildConfig.SHAZAMKIT_LINKED, isShazamKitOnClasspath())
     }
 }

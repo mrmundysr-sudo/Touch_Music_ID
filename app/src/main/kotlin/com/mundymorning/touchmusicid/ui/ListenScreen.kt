@@ -196,6 +196,7 @@ private fun StatusCard(state: ListenState, vm: MainViewModel, onOpenHelp: () -> 
                     FailureKind.NETWORK -> "No connection"
                     FailureKind.TIMEOUT -> "That took too long"
                     FailureKind.AUDIO -> "Couldn't use the microphone"
+                    FailureKind.SILENCE -> "Can't hear anything"
                     FailureKind.TOKEN -> "Authorisation problem"
                     FailureKind.UNKNOWN -> "Something went wrong"
                 },

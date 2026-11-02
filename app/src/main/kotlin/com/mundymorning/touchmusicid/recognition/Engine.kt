@@ -16,7 +16,7 @@ sealed interface EngineAvailability {
     data class Unavailable(val reason: UnavailableReason) : EngineAvailability
 }
 
-enum class FailureKind { NETWORK, TOKEN, AUDIO, TIMEOUT, UNKNOWN }
+enum class FailureKind { NETWORK, TOKEN, AUDIO, SILENCE, TIMEOUT, UNKNOWN }
 
 sealed interface EngineResult {
     data class Match(val song: Song) : EngineResult

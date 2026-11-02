@@ -54,7 +54,7 @@ fun HelpScreen(onBack: () -> Unit) {
                 "To switch on live recognition",
                 "1. In your Apple Developer account, create a media identifier and private key (Apple: “Create a media identifier and private key”).\n" +
                     "2. Deploy a small token service that signs short-lived tokens with that key (reference design in docs/TOKEN_SERVICE.md).\n" +
-                    "3. Download Apple's ShazamKit Android AAR into app/libs and add the engine described in docs/SHAZAMKIT_SETUP.md.\n" +
+                    "3. Put Apple's ShazamKit Android AAR at app/libs/shazamkit-android-release.aar. The engine is already built in and switches on automatically when the AAR is present.\n" +
                     "4. Build with -PTOKEN_SERVICE_URL=https://your-service.example/token\n" +
                     "5. Test on a real phone with real music before trusting accuracy.",
             )

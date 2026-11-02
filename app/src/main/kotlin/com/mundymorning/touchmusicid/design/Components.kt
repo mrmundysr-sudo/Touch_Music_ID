@@ -1,5 +1,12 @@
 package com.mundymorning.touchmusicid.design
 
+import android.graphics.Bitmap
+import androidx.compose.foundation.Image
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.asImageBitmap
+import com.mundymorning.touchmusicid.net.ArtworkLoader
+import com.mundymorning.touchmusicid.net.ArtworkUrl
 import android.provider.Settings
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -213,7 +220,14 @@ fun AlbumArtBox(song: Song, modifier: Modifier = Modifier, size: androidx.compos
     val a = Color.hsv(hue, 0.55f, 0.55f)
     val b = Color.hsv((hue + 50f) % 360f, 0.6f, 0.32f)
     Box(modifier.size(size).clip(RoundedCornerShape(TmiDims.TileRadius)), contentAlignment = Alignment.Center) {
-        SlotImage(AssetSlot.ALBUM_PLACEHOLDER, Modifier.fillMaxSize(), ContentScale.Crop) {
+        val artUrl = remember(song.artworkUrl) { ArtworkUrl.normalize(song.artworkUrl) }
+        val art by produceState<Bitmap?>(artUrl?.let { ArtworkLoader.cached(it) }, artUrl) {
+            if (artUrl != null && value == null) value = ArtworkLoader.load(artUrl)
+        }
+        // Real cover art when available; otherwise the existing placeholder slot / monogram below.
+        art?.let { bmp ->
+            Image(bmp.asImageBitmap(), "Album cover for ${song.title}", Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+        } ?: SlotImage(AssetSlot.ALBUM_PLACEHOLDER, Modifier.fillMaxSize(), ContentScale.Crop) {
             Box(Modifier.fillMaxSize().background(Brush.linearGradient(listOf(a, b))), contentAlignment = Alignment.Center) {
                 Text(
                     song.title.firstOrNull { it.isLetterOrDigit() }?.uppercase() ?: "♪",

@@ -31,6 +31,8 @@ jobs:
           SDKM="$(command -v sdkmanager || find "$ANDROID_HOME" -name sdkmanager -type f | head -1)"
           yes | "$SDKM" --licenses > /dev/null || true
           "$SDKM" "platforms;android-35" "build-tools;34.0.0" > /dev/null
+      - name: Place ShazamKit AAR (git-ignored)
+        run: .github/scripts/fetch-shazamkit.sh
       - name: Unit tests
         run: ./gradlew --no-daemon testDebugUnitTest
       - uses: actions/upload-artifact@v4
@@ -82,8 +84,12 @@ jobs:
           SDKM="$(command -v sdkmanager || find "$ANDROID_HOME" -name sdkmanager -type f | head -1)"
           yes | "$SDKM" --licenses > /dev/null || true
           "$SDKM" "platforms;android-35" "build-tools;34.0.0" > /dev/null
+      - name: Place ShazamKit AAR (git-ignored)
+        run: .github/scripts/fetch-shazamkit.sh
       - name: Assemble debug APK
-        run: ./gradlew --no-daemon assembleDebug
+        env:
+          TOKEN_SERVICE_URL: ${{ vars.TOKEN_SERVICE_URL }}
+        run: ./gradlew --no-daemon assembleDebug ${TOKEN_SERVICE_URL:+-PTOKEN_SERVICE_URL=$TOKEN_SERVICE_URL}
       - name: Name and describe the APK
         run: |
           mkdir -p out

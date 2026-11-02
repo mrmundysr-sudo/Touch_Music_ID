@@ -12,7 +12,11 @@ import com.mundymorning.touchmusicid.knowledge.WikiApi
 import com.mundymorning.touchmusicid.net.HttpFetcher
 import com.mundymorning.touchmusicid.net.UrlConnectionFetcher
 import com.mundymorning.touchmusicid.recognition.EngineProvider
+import com.mundymorning.touchmusicid.recognition.AudioRecordCapture
 import com.mundymorning.touchmusicid.recognition.RemoteTokenSource
+import com.mundymorning.touchmusicid.recognition.ShazamKitBindings
+import com.mundymorning.touchmusicid.recognition.ShazamKitEngine
+import com.mundymorning.touchmusicid.recognition.TokenSource
 
 /** Manual dependency container: small app, no DI framework needed. */
 class AppContainer(
@@ -30,7 +34,14 @@ class AppContainer(
     val settings = SettingsStore(app)
     val knowledge = KnowledgeRepository(KnowledgeResolver(WikiApi(http)), RoomKnowledgeCache(db.dao()))
     val knowledgeCache = RoomKnowledgeCache(db.dao())
-    val engines = engineProvider ?: EngineProvider(RemoteTokenSource(BuildConfig.TOKEN_SERVICE_URL, http))
+    val engines = engineProvider ?: RemoteTokenSource(BuildConfig.TOKEN_SERVICE_URL, http).let { tokens ->
+        val backend = ShazamKitBindings.backend()
+        EngineProvider(
+            tokens,
+            sdkLinked = { BuildConfig.SHAZAMKIT_LINKED },
+            realEngineFactory = backend?.let { b -> { t: TokenSource -> ShazamKitEngine(t, b, AudioRecordCapture()) } },
+        )
+    }
 }
 
 class TouchMusicIdApp : Application() {

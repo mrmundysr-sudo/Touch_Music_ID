@@ -5,6 +5,11 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
+// Apple's ShazamKit AAR is not on Maven. Place it at app/libs/ (git-ignored); without it the app still builds
+// and honestly reports "SDK not linked".
+val shazamKitAar = file("libs/shazamkit-android-release.aar")
+val shazamKitLinked = shazamKitAar.exists()
+
 android {
     namespace = "com.mundymorning.touchmusicid"
     compileSdk = 35
@@ -18,6 +23,7 @@ android {
         // Public URL of the operator's token service. Empty by default: no secrets, no token in the APK.
         val tokenUrl = (project.findProperty("TOKEN_SERVICE_URL") as String?).orEmpty()
         buildConfigField("String", "TOKEN_SERVICE_URL", "\"$tokenUrl\"")
+        buildConfigField("boolean", "SHAZAMKIT_LINKED", "$shazamKitLinked")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -52,6 +58,7 @@ android {
             }
         }
     }
+    sourceSets.getByName("main").java.srcDir(if (shazamKitLinked) "src/shazamkit/kotlin" else "src/noshazamkit/kotlin")
     packaging { resources.excludes += "/META-INF/{AL2.0,LGPL2.1}" }
 }
 
@@ -78,6 +85,14 @@ dependencies {
     implementation("androidx.room:room-runtime:$room")
     implementation("androidx.room:room-ktx:$room")
     ksp("androidx.room:room-compiler:$room")
+
+    if (shazamKitLinked) {
+        implementation(files("libs/shazamkit-android-release.aar"))
+        // Runtime dependencies of the AAR, versions per Apple's ShazamKit Android page (AAR carries no POM).
+        implementation("com.squareup.okhttp3:okhttp:4.12.0")
+        implementation("com.squareup.retrofit2:retrofit:2.11.0")
+        implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    }
 
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")

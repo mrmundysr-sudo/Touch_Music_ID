@@ -9,7 +9,7 @@ data class DeveloperToken(val value: String, val expiresAtEpochSeconds: Long)
 sealed interface TokenResult {
     data class Ok(val token: DeveloperToken) : TokenResult
     data object NotConfigured : TokenResult
-    data class Failed(val message: String) : TokenResult
+    data class Failed(val message: String, val network: Boolean = false) : TokenResult
 }
 
 interface TokenSource {
@@ -44,7 +44,7 @@ class RemoteTokenSource(
             if (value.isBlank() || expires <= nowSeconds()) return TokenResult.Failed("Token service returned an invalid or expired token")
             DeveloperToken(value, expires).also { cached = it }.let { TokenResult.Ok(it) }
         } catch (e: java.io.IOException) {
-            TokenResult.Failed("Could not reach token service")
+            TokenResult.Failed("Could not reach the authorisation service. Check your connection.", network = true)
         } catch (e: org.json.JSONException) {
             TokenResult.Failed("Token service returned malformed JSON")
         }
