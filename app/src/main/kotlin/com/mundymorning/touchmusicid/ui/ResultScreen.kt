@@ -142,7 +142,9 @@ private fun LinkRow(item: LibrarySong) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Service.entries.forEach { svc ->
                 TmiButton(svc.label, {
-                    if (!ExternalLinks.open(ctx, ExternalLinks.url(svc, item.song))) {
+                    val opened = if (svc == Service.SPOTIFY) ExternalLinks.openSpotify(ctx, item.song)
+                    else ExternalLinks.open(ctx, ExternalLinks.url(svc, item.song))
+                    if (!opened) {
                         Toast.makeText(ctx, "Couldn't open ${svc.label}", Toast.LENGTH_SHORT).show()
                     }
                 }, Modifier.weight(1f), primary = false, compact = true)
