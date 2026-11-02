@@ -54,7 +54,7 @@
 - [ ] Album-art display rules if Apple artwork URLs are used
 
 ## Definition of done (first APK)
-- [x] Approved acceptance criteria pass in tests (72 JVM tests; live-network ones opt-in)
+- [x] Approved acceptance criteria pass in tests (76 JVM tests: 73 by default, 3 live-network opt-in)
 - [x] GitHub Actions green for the delivered commit (recorded in BRANCH_STATUS and the work report)
 - [x] APK delivered to the owner labelled CI or local
 - [x] Known limitations and untested items recorded (README, work report)
