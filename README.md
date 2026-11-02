@@ -10,9 +10,9 @@ Hear a song, identify it, discover its story. Android-first, by Mundy Morning St
 | Area | State | Evidence |
 |---|---|---|
 | One-tap Listen UX, permission flow, listening/identifying/no-match/error/not-configured states | Built | UI tests + screenshots |
-| Recognition architecture (engine interface, state machine, token-source client) | Built, SDK adapter **not linked** | 20 unit tests |
+| Recognition architecture (engine interface, state machine, token-source client) | Built, SDK adapter **not linked** | 22 unit tests |
 | Demo mode (example songs, labelled everywhere, no microphone) | Built | UI test |
-| Wikipedia + Wikidata facts: conservative matching, sources, attribution, offline cache, ambiguity picker | Built; parsing/matching tested on fixtures; **not yet verified against the live APIs from the dev sandbox** (see CI "live-wiki" job) | 30+ unit tests |
+| Wikipedia + Wikidata facts: conservative matching, sources, attribution, offline cache, ambiguity picker | Built; parsing/matching tested on fixtures; **not yet verified against the live APIs from the dev sandbox** (see CI "live-wiki" job) | 28 unit tests |
 | Apple Music / Spotify / YouTube links (search URLs, allow-listed canonical links), share sheet | Built | unit tests |
 | History + favorites (Room), delete/clear, demo cleanup | Built | persistence tests |
 | Replaceable artwork slots for 720×1600 art | Built (22 slots, none required) | [manifest](docs/VISUAL_ASSET_MANIFEST.md) + test |
@@ -29,7 +29,7 @@ Hear a song, identify it, discover its story. Android-first, by Mundy Morning St
 Requires JDK 17+ and an Android SDK (platform 35, build-tools 34+).
 ```bash
 ./gradlew assembleDebug            # app/build/outputs/apk/debug/app-debug.apk
-./gradlew testDebugUnitTest        # 72 JVM tests (3 live-network tests are opt-in)
+./gradlew testDebugUnitTest        # 75 JVM tests: 72 run by default, 3 live-network tests are opt-in
 LIVE_WIKI=1 ./gradlew testDebugUnitTest --tests '*LiveWikiSmokeTest*'   # real Wikipedia/Wikidata
 ```
 UI-flow tests write screenshots to `app/build/screenshots/` (copies in [docs/screenshots](docs/screenshots)).
