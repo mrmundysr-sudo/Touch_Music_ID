@@ -4,7 +4,9 @@ ShazamKit needs an **Apple developer token** (Apple's page: "provide your own `D
 signed with a private key tied to your Apple Developer account. **That key must never ship in the APK or sit in this
 repository (DEC-007).** The app therefore asks a small service you host for a *short-lived* token.
 
-> This build contains the **client** side only (`RemoteTokenSource`). No service is deployed and no Apple key exists yet.
+> Client: `RemoteTokenSource`. Reference service: `backend/token-service/` (Cloudflare Workers, free plan). Deploy steps: `backend/token-service/DEPLOY.md`. **Not yet deployed; Apple has not yet accepted a token from it.**
+
+**Token format** (Apple guide → "Generating Developer Tokens"; not independently confirmed because that page did not render here): ES256 JWT, header `{alg, kid, typ}`, claims `{iss: Team ID, iat, exp}`, `exp` at most 6 months out. No `id` header, no `sub` (an earlier draft of this repo wrongly had them).
 > The exact JWT claims and lifetime come from Apple's "Create a media identifier and private key" guide; this document
 > does not restate them because they were not verifiable here.
 

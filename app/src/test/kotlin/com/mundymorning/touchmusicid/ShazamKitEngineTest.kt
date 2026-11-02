@@ -109,6 +109,18 @@ class ShazamKitEngineTest {
         assertEquals(FailureKind.TOKEN, (engine(FakeBackend(m), FakeCapture()).recognize { } as EngineResult.Failure).kind)
     }
 
+    @Test fun rejectedTokenInvalidatesCacheSoRetryGetsAFreshOne() = runTest {
+        var invalidated = 0
+        val tokens = object : TokenSource {
+            override val isConfigured = true
+            override suspend fun token() = TokenResult.Ok(DeveloperToken("a.b.c", Long.MAX_VALUE))
+            override fun invalidate() { invalidated++ }
+        }
+        val m = FakeMatcher(); m.onFeed = { m.flow.tryEmit(BackendResult.Error(FailureKind.TOKEN, "expired")) }
+        engine(FakeBackend(m), FakeCapture(), tokens).recognize { }
+        assertEquals(1, invalidated)
+    }
+
     @Test fun tokenServiceFailureNeverOpensMic() = runTest {
         val cap = FakeCapture()
         val r = engine(FakeBackend(FakeMatcher()), cap, Tokens(TokenResult.Failed("down", network = true))).recognize { }

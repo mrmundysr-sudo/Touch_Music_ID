@@ -52,7 +52,10 @@ class ShazamKitEngine(
                 matcher.results.collect { r ->
                     when (r) {
                         is BackendResult.Match -> outcome.complete(EngineResult.Match(r.song))
-                        is BackendResult.Error -> outcome.complete(EngineResult.Failure(r.kind, r.message))
+                        is BackendResult.Error -> {
+                            if (r.kind == FailureKind.TOKEN) tokens.invalidate() // expired/revoked: next attempt fetches a fresh token
+                            outcome.complete(EngineResult.Failure(r.kind, r.message))
+                        }
                         BackendResult.NoMatch -> Unit // more audio may still match; decided at the end of the budget
                     }
                 }

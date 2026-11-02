@@ -15,6 +15,9 @@ sealed interface TokenResult {
 interface TokenSource {
     val isConfigured: Boolean
     suspend fun token(): TokenResult
+
+    /** Forget any cached token (call when Apple rejects it, e.g. expired or revoked) so the next call fetches a new one. */
+    fun invalidate() {}
 }
 
 /**
@@ -32,6 +35,8 @@ class RemoteTokenSource(
 
     override val isConfigured: Boolean get() = url.startsWith("https://")
 
+    override fun invalidate() { cached = null }
+
     override suspend fun token(): TokenResult {
         if (!isConfigured) return TokenResult.NotConfigured
         cached?.let { if (it.expiresAtEpochSeconds - refreshMarginSeconds > nowSeconds()) return TokenResult.Ok(it) }
@@ -41,7 +46,7 @@ class RemoteTokenSource(
             val json = JSONObject(response.body)
             val value = json.optString("token")
             val expires = json.optLong("expiresAt", 0)
-            if (value.isBlank() || expires <= nowSeconds()) return TokenResult.Failed("Token service returned an invalid or expired token")
+            if (!looksLikeJwt(value) || expires <= nowSeconds()) return TokenResult.Failed("Token service returned an invalid or expired token")
             DeveloperToken(value, expires).also { cached = it }.let { TokenResult.Ok(it) }
         } catch (e: java.io.IOException) {
             TokenResult.Failed("Could not reach the authorisation service. Check your connection.", network = true)
@@ -50,3 +55,6 @@ class RemoteTokenSource(
         }
     }
 }
+
+/** Cheap sanity check: three non-empty base64url segments. Rejects error pages and raw key text before Apple ever sees them. */
+internal fun looksLikeJwt(s: String) = Regex("[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+").matches(s)

@@ -1,0 +1,11 @@
+name = "touch-music-id-token"
+main = "worker.mjs"
+compatibility_date = "2025-01-01"
+workers_dev = true
+
+# Identifiers only (not secret). The private key is NOT here: set it with `wrangler secret put APPLE_P8_PRIVATE_KEY`.
+[vars]
+APPLE_TEAM_ID = "2M956232BT"
+APPLE_KEY_ID = "GSSMVT3KYL"
+TOKEN_TTL_SECONDS = "3600"
+RATE_LIMIT_PER_MIN = "30"

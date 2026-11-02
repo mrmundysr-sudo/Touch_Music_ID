@@ -42,6 +42,17 @@ jobs:
           path: app/build/reports/tests/testDebugUnitTest
           if-no-files-found: ignore
 
+  token-service:
+    name: Token service tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm test
+        working-directory: backend/token-service
+
   live-wiki:
     name: Live Wikipedia/Wikidata smoke (informational)
     runs-on: ubuntu-latest

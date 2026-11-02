@@ -1,0 +1,1 @@
+{ "name": "touch-music-id-token-service", "private": true, "type": "module", "scripts": { "test": "node --test" } }

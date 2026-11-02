@@ -22,9 +22,9 @@ class TokenSourceTest {
     }
 
     @Test fun parsesAndCachesTokenUntilNearExpiry() = runTest {
-        val http = FakeHttp { ok("""{"token":"jwt-1","expiresAt":2000}""") }
+        val http = FakeHttp { ok("""{"token":"h.p.s1","expiresAt":2000}""") }
         val s = source("https://tokens.example/apple", http)
-        assertEquals("jwt-1", (s.token() as TokenResult.Ok).token.value)
+        assertEquals("h.p.s1", (s.token() as TokenResult.Ok).token.value)
         s.token()
         assertEquals("cached while valid", 1, http.urls.size)
         now = 1_950 // within the 60 s refresh margin
@@ -41,5 +41,32 @@ class TokenSourceTest {
         assertTrue(source("https://t.example", FakeHttp { HttpResponse(500, "") }).token() is TokenResult.Failed)
         assertTrue(source("https://t.example", FakeHttp { ok("not json") }).token() is TokenResult.Failed)
         assertTrue(source("https://t.example", FakeHttp { null }).token() is TokenResult.Failed)
+    }
+
+    @Test fun rejectsNonJwtTokensSuchAsErrorPagesOrRawKeys() = runTest {
+        for (bad in listOf("<html>oops</html>", "-----BEGIN PRIVATE KEY-----", "onlyone", "a.b")) {
+            val body = org.json.JSONObject().put("token", bad).put("expiresAt", 9999).toString()
+            assertTrue(bad, source("https://t.example", FakeHttp { ok(body) }).token() is TokenResult.Failed)
+        }
+    }
+
+    @Test fun rateLimitedOrUnconfiguredServiceIsAFailureNotAToken() = runTest {
+        for (code in listOf(429, 503, 404)) {
+            val r = source("https://t.example", FakeHttp { HttpResponse(code, """{"error":"x"}""") }).token()
+            assertTrue("HTTP $code", r is TokenResult.Failed)
+            assertFalse("a service error is not a network outage", (r as TokenResult.Failed).network)
+        }
+        assertTrue((source("https://t.example", FakeHttp { null }).token() as TokenResult.Failed).network)
+    }
+
+    @Test fun expiredTokenIsRefetchedAndInvalidateForcesRefetch() = runTest {
+        var n = 0
+        val http = FakeHttp { ok("""{"token":"h.p.s${++n}","expiresAt":${now + 600}}""") }
+        val s = source("https://t.example", http)
+        assertEquals("h.p.s1", (s.token() as TokenResult.Ok).token.value)
+        now += 599 // inside the refresh margin: the old token is treated as expired
+        assertEquals("h.p.s2", (s.token() as TokenResult.Ok).token.value)
+        s.invalidate() // Apple rejected it
+        assertEquals("h.p.s3", (s.token() as TokenResult.Ok).token.value)
     }
 }
