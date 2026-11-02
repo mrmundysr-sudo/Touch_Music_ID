@@ -1,32 +1,16 @@
-# [App Name] — Decision Log
+# Touch Music ID — Approved Decisions
+2026-11-01. Append future decisions with stable IDs; never silently rewrite history.
 
-> Record confirmed decisions separately from brainstorming. Never silently rewrite history.
+- DEC-001 Approved: Android-first app, Touch Music ID.
+- DEC-002 Approved: ShazamKit recognition plus Wikipedia/Wikidata facts as central experience.
+- DEC-003 Approved: Apple Music, Spotify, YouTube outbound discovery links, where valid.
+- DEC-004 Approved: Local identification history, favorites, share.
+- DEC-005 Approved: Commercial-quality first-pass UX, modular and replaceable visual assets (720x1600 portrait design workflow).
+- DEC-006 Approved: Real integration architecture and explicit demo/unconfigured state until Apple credentials exist.
+- DEC-007 Approved: No private key or long-lived secret bundled in APK or repository.
+- DEC-008 Approved: GitHub-first, separate development branch, early buildable APK, CI and honest test evidence.
+- DEC-009 Directional: Daily usage/unlock and Touch family subscription; precise pricing and implementation deferred.
+- DEC-010 Approved: Accuracy goal 95%+, to be validated, not claimed.
+- DEC-011 Approved: Follow Mundy-App-Template and inspect Touch-Modules before duplicating components.
 
-## How to use
-1. Give each decision a stable ID: DEC-001, DEC-002, etc.
-2. Mark as **Proposed**, **Approved**, **Superseded**, or **Rejected**.
-3. Record the rationale and alternatives when known.
-4. Only an explicit owner approval changes a proposal to Approved.
-5. Link later changes to the prior decision; keep historical entries.
-
-## Decisions
-
-### DEC-001 — [Decision title]
-- **Status:** Proposed
-- **Date:** [YYYY-MM-DD]
-- **Decision:** [What is being decided]
-- **Rationale:** [Why]
-- **Alternatives:** [Options considered]
-- **Approved by:** [pending]
-- **Affected files/modules:** [if known]
-- **Supersedes:** None
-
-## Open questions
-| ID | Question | Status | Next step |
-|---|---|---|---|
-| Q-001 | [Question] | Open | [Research/discuss] |
-
-## Change history
-| Date | Change | Related decision |
-|---|---|---|
-| [YYYY-MM-DD] | Initial template | — |
+Open: exact ShazamKit Android SDK version, licensing and credential workflow; secure token service design; privacy disclosure; source-link behavior; release monetization.
