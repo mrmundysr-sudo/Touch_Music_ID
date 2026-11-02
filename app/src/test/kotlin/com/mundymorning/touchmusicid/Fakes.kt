@@ -22,9 +22,11 @@ fun ok(body: String) = HttpResponse(200, body)
 fun entityJson(
     id: String, label: String?, description: String? = null, aliases: List<String> = emptyList(),
     claims: Map<String, List<Any>> = emptyMap(), enwiki: String? = null,
+    /** "en" normally; "mul" models Wikidata's language-neutral label (names identical in every language have no `en` label at all). */
+    labelLanguage: String = "en",
 ): JSONObject = JSONObject().apply {
     put("id", id)
-    label?.let { put("labels", JSONObject().put("en", JSONObject().put("language", "en").put("value", it))) }
+    label?.let { put("labels", JSONObject().put(labelLanguage, JSONObject().put("language", labelLanguage).put("value", it))) }
     description?.let { put("descriptions", JSONObject().put("en", JSONObject().put("value", it))) }
     if (aliases.isNotEmpty()) put("aliases", JSONObject().put("en", JSONArray(aliases.map { JSONObject().put("value", it) })))
     enwiki?.let { put("sitelinks", JSONObject().put("enwiki", JSONObject().put("title", it))) }

@@ -75,8 +75,10 @@ class KnowledgeRepositoryTest {
     @Test fun negativeResultsExpireSooner() = runTest {
         val w = FakeWiki(emptyMap(), emptyMap()); val (r, _) = repo(w)
         val first = r.load(Song("Nothing", "Nobody")) as KnowledgeResult.Found
-        assertEquals(MatchStatus.NONE, first.bundle.artist.status)
-        now += 2 * KnowledgeRepository.DAY
+        assertEquals(MatchStatus.NOT_FOUND, first.bundle.artist.status)
+        now += 30 * 60 * 1000 // within the 1 h NOT_FOUND lifetime: served from cache
+        assertEquals(Freshness.CACHE_FRESH, (r.load(Song("Nothing", "Nobody")) as KnowledgeResult.Found).freshness)
+        now += 31 * 60 * 1000 // past 1 h: looked up again
         assertEquals(Freshness.LIVE, (r.load(Song("Nothing", "Nobody")) as KnowledgeResult.Found).freshness)
     }
 
@@ -105,7 +107,7 @@ class KnowledgeRepositoryTest {
 
     @Test fun sourcesListAttributesEveryEntity() {
         val e = EntityKnowledge("Q1", "Queen", null, null, "https://en.wikipedia.org/wiki/Queen", "https://www.wikidata.org/wiki/Q1", emptyList(), "b")
-        val s = KnowledgeBundle(Lookup(MatchStatus.VERIFIED, e), Lookup(MatchStatus.NONE), 0).sources()
+        val s = KnowledgeBundle(Lookup(MatchStatus.VERIFIED, e), Lookup(MatchStatus.NOT_FOUND), 0).sources()
         assertEquals(listOf("Wikipedia: Queen", "Wikidata: Queen"), s.map { it.label })
     }
 }

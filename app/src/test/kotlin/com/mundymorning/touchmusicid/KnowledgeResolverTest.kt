@@ -91,7 +91,7 @@ class KnowledgeResolverTest {
     @Test fun nameMustMatchExactlyNotJustPrefix() = runTest {
         val p = entityJson("Q8", "Queen Latifah", "rapper", claims = mapOf("P31" to listOf("Q5"), "P106" to listOf("Q2252262")))
         val w = FakeWiki(mapOf("Q8" to p), mapOf("Queen" to searchJson(Triple("Q8", "Queen Latifah", null))))
-        assertEquals(MatchStatus.NONE, KnowledgeResolver(WikiApi(w.http)).resolveArtist("Queen").status)
+        assertEquals(MatchStatus.NOT_FOUND, KnowledgeResolver(WikiApi(w.http)).resolveArtist("Queen").status)
     }
 
     @Test fun songVerifiedByTitleAndPerformer() = runTest {
@@ -110,7 +110,7 @@ class KnowledgeResolverTest {
         // Same title, but performed by someone else: must not attach Queen's article to another artist's recognition.
         val w = wiki(articleSearch = wpSearchJson())
         val (_, song) = KnowledgeResolver(WikiApi(w.http)).resolve(Song("Bohemian Rhapsody", "Some Cover Band"))
-        assertEquals(MatchStatus.NONE, song.status)
+        assertEquals(MatchStatus.NOT_FOUND, song.status)
         assertNull(song.entity)
     }
 
@@ -124,11 +124,11 @@ class KnowledgeResolverTest {
             articleSearch = wpSearchJson("Obscure Song (other)", "Obscure Song"),
         )
         val r = KnowledgeResolver(WikiApi(w.http))
-        val ok = r.resolveSong(Song("Obscure Song", "The Testers"), Lookup(MatchStatus.NONE))
+        val ok = r.resolveSong(Song("Obscure Song", "The Testers"), Lookup(MatchStatus.NOT_FOUND))
         assertEquals(MatchStatus.VERIFIED, ok.status)
         assertNull("no wikidata record, so no qid is claimed", ok.entity!!.qid)
-        val wrongArtist = r.resolveSong(Song("Obscure Song", "Totally Else"), Lookup(MatchStatus.NONE))
-        assertEquals(MatchStatus.NONE, wrongArtist.status)
+        val wrongArtist = r.resolveSong(Song("Obscure Song", "Totally Else"), Lookup(MatchStatus.NOT_FOUND))
+        assertEquals(MatchStatus.NOT_FOUND, wrongArtist.status)
     }
 
     @Test fun disambiguationPagesAreNeverUsed() = runTest {
@@ -137,8 +137,8 @@ class KnowledgeResolverTest {
             summaries = mapOf("Hey" to summaryJson("Hey", "Hey by Nobody may refer to:", type = "disambiguation")),
             articleSearch = wpSearchJson("Hey"),
         )
-        val r = KnowledgeResolver(WikiApi(w.http)).resolveSong(Song("Hey", "Nobody"), Lookup(MatchStatus.NONE))
-        assertEquals(MatchStatus.NONE, r.status)
+        val r = KnowledgeResolver(WikiApi(w.http)).resolveSong(Song("Hey", "Nobody"), Lookup(MatchStatus.NOT_FOUND))
+        assertEquals(MatchStatus.NOT_FOUND, r.status)
     }
 
     @Test fun sameBirthplaceAndFormationPlaceIsShownOnce() = runTest {
@@ -153,7 +153,7 @@ class KnowledgeResolverTest {
     }
 
     @Test fun blankArtistAssertsNothing() = runTest {
-        assertEquals(MatchStatus.NONE, KnowledgeResolver(WikiApi(wiki().http)).resolveArtist("  ").status)
+        assertEquals(MatchStatus.NOT_FOUND, KnowledgeResolver(WikiApi(wiki().http)).resolveArtist("  ").status)
     }
 }
 

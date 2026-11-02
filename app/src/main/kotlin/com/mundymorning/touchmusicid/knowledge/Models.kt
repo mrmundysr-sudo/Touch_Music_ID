@@ -8,12 +8,14 @@ data class Fact(val label: String, val value: String, val source: FactSource, va
 data class SourceLink(val label: String, val url: String)
 
 enum class MatchStatus {
+    /** The lookup could not be completed (network, Wikidata error body, malformed response). Says NOTHING about whether an article exists. Never cached. */
+    LOOKUP_FAILED,
     /** Exactly one candidate passed all checks. */
     VERIFIED,
     /** More than one plausible candidate; the user must choose. Nothing is asserted. */
     AMBIGUOUS,
-    /** No candidate passed the checks. Nothing is asserted. */
-    NONE,
+    /** The lookup completed and no candidate passed the checks. A genuine, checked "not found". */
+    NOT_FOUND,
 }
 
 data class Candidate(val qid: String, val label: String, val description: String?)
@@ -35,6 +37,8 @@ data class Lookup(
     val status: MatchStatus,
     val entity: EntityKnowledge? = null,
     val candidates: List<Candidate> = emptyList(),
+    /** Set only when [status] is LOOKUP_FAILED: why the lookup could not be completed. */
+    val failure: KnowledgeResult.Kind? = null,
 )
 
 data class KnowledgeBundle(

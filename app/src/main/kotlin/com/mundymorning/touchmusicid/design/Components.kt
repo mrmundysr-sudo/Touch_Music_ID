@@ -254,6 +254,35 @@ fun EmptyState(slot: AssetSlot, title: String, body: String, modifier: Modifier 
     }
 }
 
+/**
+ * A compact status message for inline cards (a failed or empty lookup): a small icon beside a title and one line of explanation,
+ * with the actions underneath. Replaces the 160 dp EmptyState for these cases so a miss doesn't push the page down.
+ * The icon is the replaceable [slot] art when supplied, otherwise [fallbackIcon].
+ */
+@Composable
+fun CompactNotice(
+    slot: AssetSlot?,
+    fallbackIcon: ImageVector,
+    title: String,
+    body: String,
+    modifier: Modifier = Modifier,
+    actions: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit = {},
+) {
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
+            Box(Modifier.size(40.dp).clip(CircleShape).background(TmiColors.Surface), contentAlignment = Alignment.Center) {
+                val icon: @Composable () -> Unit = { Icon(fallbackIcon, null, Modifier.size(22.dp), tint = TmiColors.TextMedium) }
+                if (slot != null) SlotImage(slot, Modifier.fillMaxSize(), ContentScale.Fit) { icon() } else icon()
+            }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(title, style = MaterialTheme.typography.titleSmall, color = TmiColors.TextHigh)
+                Text(body, style = MaterialTheme.typography.bodySmall, color = TmiColors.TextMedium)
+            }
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), content = actions)
+    }
+}
+
 @Composable
 fun TileBackground(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Box(modifier.fillMaxWidth().clip(RoundedCornerShape(TmiDims.TileRadius)).border(1.dp, TmiColors.Outline.copy(alpha = 0.7f), RoundedCornerShape(TmiDims.TileRadius))) {

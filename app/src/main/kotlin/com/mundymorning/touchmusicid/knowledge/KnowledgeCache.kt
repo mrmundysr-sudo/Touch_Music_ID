@@ -25,10 +25,11 @@ object BundleCodec {
     fun decode(s: String): KnowledgeBundle? = try {
         val o = JSONObject(s)
         if (o.optInt("v") != 1) null else KnowledgeBundle(lookup(o.getJSONObject("artist")), lookup(o.getJSONObject("song")), o.getLong("at"))
-    } catch (e: org.json.JSONException) { null }
+    } catch (e: org.json.JSONException) { null } catch (e: IllegalArgumentException) { null } // unknown/legacy status names are a cache miss, not a crash
 
     private fun lookup(l: Lookup) = JSONObject().apply {
         put("status", l.status.name)
+        l.failure?.let { put("failure", it.name) }
         l.entity?.let { put("entity", entity(it)) }
         put("candidates", JSONArray(l.candidates.map { JSONObject().put("qid", it.qid).put("label", it.label).put("desc", it.description) }))
     }
@@ -39,6 +40,7 @@ object BundleCodec {
         o.optJSONArray("candidates")?.let { a ->
             (0 until a.length()).map { a.getJSONObject(it) }.map { Candidate(it.getString("qid"), it.getString("label"), it.optStr("desc")) }
         }.orEmpty(),
+        failure = o.optStr("failure")?.let { runCatching { KnowledgeResult.Kind.valueOf(it) }.getOrNull() },
     )
 
     private fun entity(e: EntityKnowledge) = JSONObject().apply {

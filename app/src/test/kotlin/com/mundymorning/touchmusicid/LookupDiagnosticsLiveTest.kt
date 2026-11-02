@@ -64,13 +64,31 @@ class LookupDiagnosticsLiveTest {
         catch (e: IOException) { null to "IO(${e.javaClass.simpleName})" }
 
     private fun statusOf(l: Lookup?, err: String?) = err?.let { "LOOKUP_FAILED[$it]" } ?: when (l!!.status) {
-        MatchStatus.VERIFIED -> "VERIFIED(${l.entity?.qid})"; MatchStatus.AMBIGUOUS -> "AMBIGUOUS(${l.candidates.size})"; MatchStatus.NONE -> "NONE"
+        MatchStatus.VERIFIED -> "VERIFIED(${l.entity?.qid})"; MatchStatus.AMBIGUOUS -> "AMBIGUOUS(${l.candidates.size})"
+        MatchStatus.NOT_FOUND -> "NOT_FOUND"; MatchStatus.LOOKUP_FAILED -> "LOOKUP_FAILED"
     }
 
     @Test fun traceRepresentativeArtistsThroughTheLiveLookup() = runBlocking {
         assumeTrue("LIVE_DIAG not set", enabled)
         println("DIAG env java=${System.getProperty("java.version")} os=${System.getProperty("os.name")} fetcher=UrlConnectionFetcher(timeouts 8s/12s, 150ms spacing, gzip)")
         println("DIAG code-path: WikiApi -> KnowledgeResolver (same classes the app wires in AppContainer; app adds KnowledgeRepository + Room cache)")
+        // Requirement: confirm the ACTUAL label fields Wikidata returns for the artists that used to fail every time.
+        run {
+            val rec = Recording(UrlConnectionFetcher())
+            for ((name, qid) in listOf("Morgan Wallen" to "Q29561472", "Beyoncé" to "Q36153", "Post Malone" to "Q21621919", "Kendrick Lamar" to "Q130798", "The Weeknd" to "Q2121062", "Bad Bunny" to "Q44333953")) {
+                for (langs in listOf("en", "en%7Cmul")) {
+                    val (r, err) = attempt { rec.get("https://www.wikidata.org/w/api.php?action=wbgetentities&ids=$qid&props=labels%7Caliases&languages=$langs&format=json") }
+                    val ent = r?.let { runCatching { JSONObject(it.body).getJSONObject("entities").getJSONObject(qid) }.getOrNull() }
+                    fun keys(o: JSONObject?) = o?.keys()?.asSequence()?.toList() ?: emptyList()
+                    val labels = ent?.optJSONObject("labels"); val aliases = ent?.optJSONObject("aliases")
+                    println("DIAGLABEL $name $qid request languages=${langs.replace("%7C", "|")}: label languages=${keys(labels)} " +
+                        keys(labels).joinToString { "$it='${labels!!.getJSONObject(it).optString("value")}'" } +
+                        " | alias languages=${keys(aliases)} | ${err ?: "ok"}")
+                    rec.drain()
+                }
+            }
+        }
+        var apiErrorEvents = 0; var finalFailures = 0
         val results = LinkedHashMap<String, MutableList<String>>()
         for (pass in 1..3) {
             for (name in artists) {
@@ -102,7 +120,9 @@ class LookupDiagnosticsLiveTest {
                 val (lookup, err) = attempt { resolver.resolveArtist(name) }
                 val evs = rec.drain()
                 val bad = evs.filter { it.kind != "OK" }
+                apiErrorEvents += bad.count { it.kind == "API_ERROR" }
                 val s = statusOf(lookup, err)
+                if (err != null) finalFailures++
                 results.getOrPut(name) { mutableListOf() } += s
                 println("DIAG  PRODUCTION resolveArtist pass $pass: $s${if (bad.isNotEmpty()) "  NON-OK EVENTS: ${fmt(bad)}" else ""}")
             }
@@ -119,6 +139,9 @@ class LookupDiagnosticsLiveTest {
         for ((n, l) in results) println("DIAGSUM | $n | ${l.joinToString(" | ")} | ${if (l.toSet().size == 1) "yes" else "NO (flaky)"} |")
         val flaky = results.filter { it.value.toSet().size > 1 }.keys
         val notVerified = results.filter { !it.value.all { s -> s.startsWith("VERIFIED") } }.keys
+        val required = listOf("Morgan Wallen", "Beyoncé", "Post Malone", "Kendrick Lamar", "The Weeknd", "Bad Bunny")
+        println("DIAGSUM required six VERIFIED in every pass: ${required.associateWith { n -> results[n]!!.all { it.startsWith("VERIFIED") } }}")
+        println("DIAGSUM wikidata error responses seen during production lookups (each retried up to twice): $apiErrorEvents ; lookups that still ended LOOKUP_FAILED: $finalFailures")
         println("DIAGSUM flaky artists: ${flaky.ifEmpty { listOf("none") }}")
         println("DIAGSUM not VERIFIED in every pass: ${notVerified.ifEmpty { listOf("none") }}")
     }

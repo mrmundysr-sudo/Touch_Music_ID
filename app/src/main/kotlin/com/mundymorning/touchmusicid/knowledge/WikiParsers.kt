@@ -77,11 +77,14 @@ object WikiParsers {
             if (e.has("missing")) return@mapNotNull null
             id to WikidataEntity(
                 id = id,
-                label = e.optJSONObject("labels")?.optJSONObject("en")?.optStringOrNull("value"),
+                // English label first; otherwise the language-neutral `mul` label (requested alongside `en`).
+                label = e.optJSONObject("labels")?.let { l -> l.optJSONObject("en")?.optStringOrNull("value") ?: l.optJSONObject("mul")?.optStringOrNull("value") },
                 description = e.optJSONObject("descriptions")?.optJSONObject("en")?.optStringOrNull("value"),
-                aliases = e.optJSONObject("aliases")?.optJSONArray("en")?.let { a ->
-                    (0 until a.length()).mapNotNull { a.getJSONObject(it).optStringOrNull("value") }
-                }.orEmpty(),
+                aliases = listOf("en", "mul").flatMap { lang ->
+                    e.optJSONObject("aliases")?.optJSONArray(lang)?.let { a ->
+                        (0 until a.length()).mapNotNull { a.optJSONObject(it)?.optStringOrNull("value") }
+                    }.orEmpty()
+                }.distinct(),
                 claims = parseClaims(e.optJSONObject("claims")),
                 enwikiTitle = e.optJSONObject("sitelinks")?.optJSONObject("enwiki")?.optStringOrNull("title"),
             )

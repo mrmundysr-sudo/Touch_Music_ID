@@ -39,7 +39,7 @@ import android.widget.Toast
 import com.mundymorning.touchmusicid.data.LibrarySong
 import com.mundymorning.touchmusicid.design.AlbumArtBox
 import com.mundymorning.touchmusicid.design.AssetSlot
-import com.mundymorning.touchmusicid.design.EmptyState
+import com.mundymorning.touchmusicid.design.CompactNotice
 import com.mundymorning.touchmusicid.design.GlassCard
 import com.mundymorning.touchmusicid.design.Pill
 import com.mundymorning.touchmusicid.design.TmiButton
@@ -106,8 +106,8 @@ fun ResultScreen(vm: MainViewModel, songKey: String, onBack: () -> Unit) {
                 is KnowledgeUi.Error -> item { ErrorCard(k.kind, onRetry = vm::retryKnowledge) }
                 is KnowledgeUi.Ready -> {
                     if (k.freshness == Freshness.CACHE_STALE_OFFLINE) item { OfflineBanner(k.bundle.fetchedAtMillis, vm::retryKnowledge) }
-                    item { LookupSection("About the artist", song.artist, k.bundle.artist, vm::chooseArtist) }
-                    item { LookupSection("About the song", song.title, k.bundle.song, null) }
+                    item { LookupSection("About the artist", song.artist, k.bundle.artist, vm::chooseArtist, vm::retryKnowledge) }
+                    item { LookupSection("About the song", song.title, k.bundle.song, null, vm::retryKnowledge) }
                     item { SourcesCard(k.bundle) }
                 }
             }
@@ -202,7 +202,7 @@ private fun OfflineBanner(fetchedAt: Long, onRetry: () -> Unit) = GlassCard {
 }
 
 @Composable
-private fun LookupSection(title: String, subject: String, lookup: Lookup, onChoose: ((String) -> Unit)?) {
+private fun LookupSection(title: String, subject: String, lookup: Lookup, onChoose: ((String) -> Unit)?, onRetry: () -> Unit) {
     val ctx = LocalContext.current
     when (lookup.status) {
         MatchStatus.VERIFIED -> EntityCard(title, lookup.entity!!)
@@ -226,15 +226,31 @@ private fun LookupSection(title: String, subject: String, lookup: Lookup, onChoo
                 }
             }
         }
-        MatchStatus.NONE -> GlassCard {
+        MatchStatus.NOT_FOUND -> GlassCard {
             Text(title, style = MaterialTheme.typography.titleMedium, color = TmiColors.TextHigh, modifier = Modifier.semantics { heading() })
-            EmptyState(
-                AssetSlot.EMPTY_NO_ARTICLE, "No verified article for “$subject”",
-                "We only show a Wikipedia or Wikidata match when its name and type check out. Nothing here is guessed.",
-                action = {
-                    TmiButton("Search Wikipedia", { ExternalLinks.open(ctx, ExternalLinks.wikipediaSearchUrl(subject)) }, primary = false, icon = Icons.Filled.Search)
+            CompactNotice(
+                AssetSlot.EMPTY_NO_ARTICLE, Icons.Filled.Search,
+                "No verified article for “$subject”",
+                "We checked, and no Wikipedia or Wikidata entry passed our name and type checks. Nothing here is guessed.",
+            ) {
+                TmiButton("Search Wikipedia", { ExternalLinks.open(ctx, ExternalLinks.wikipediaSearchUrl(subject)) }, Modifier.weight(1f), primary = false, compact = true, icon = Icons.Filled.Search)
+                TmiButton("Check again", onRetry, Modifier.weight(1f), primary = false, compact = true, icon = Icons.Filled.Refresh)
+            }
+        }
+        MatchStatus.LOOKUP_FAILED -> GlassCard {
+            Text(title, style = MaterialTheme.typography.titleMedium, color = TmiColors.TextHigh, modifier = Modifier.semantics { heading() })
+            CompactNotice(
+                null, Icons.Filled.Warning,
+                when (lookup.failure) {
+                    KnowledgeResult.Kind.OFFLINE -> "You're offline"
+                    KnowledgeResult.Kind.RATE_LIMITED -> "Wikipedia asked us to slow down"
+                    KnowledgeResult.Kind.SERVER -> "Wikipedia isn't responding"
+                    else -> "Couldn't check right now"
                 },
-            )
+                "This says nothing about whether “$subject” has an article. Try again in a moment.",
+            ) {
+                TmiButton("Retry", onRetry, Modifier.weight(1f), compact = true, icon = Icons.Filled.Refresh)
+            }
         }
     }
 }

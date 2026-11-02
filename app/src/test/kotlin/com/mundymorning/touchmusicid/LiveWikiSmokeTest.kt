@@ -40,8 +40,8 @@ class LiveWikiSmokeTest {
         val resolver = KnowledgeResolver(WikiApi(UrlConnectionFetcher()))
         val (artist, song) = resolver.resolve(Song("Zzqx Vlorb Wmpt", "Qqxz Plorbnik Vwyt"))
         summarize("artist nonsense", artist); summarize("song nonsense", song)
-        assertEquals(MatchStatus.NONE, artist.status)
-        assertEquals(MatchStatus.NONE, song.status)
+        assertEquals(MatchStatus.NOT_FOUND, artist.status)
+        assertEquals(MatchStatus.NOT_FOUND, song.status)
     }
 
     @Test fun commonNameIsNeverSilentlyGuessed() = runBlocking {

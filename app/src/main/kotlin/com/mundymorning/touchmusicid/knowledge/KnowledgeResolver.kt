@@ -6,31 +6,47 @@ import com.mundymorning.touchmusicid.domain.normalizeText
 /**
  * Conservative entity resolution. The rule is: assert nothing unless a checkable signal supports it.
  *  - Artist: Wikidata item whose label/alias equals the name AND that is demonstrably a musical entity.
- *    Exactly one such item => VERIFIED. Several => AMBIGUOUS (user chooses). None => NONE.
+ *    Exactly one such item => VERIFIED. Several => AMBIGUOUS (user chooses). None => NOT_FOUND. Any failure => LOOKUP_FAILED (never NOT_FOUND).
  *  - Song: Wikidata item whose label equals the title, that is a musical work, and whose performer matches the
  *    recognised artist. Falls back to a Wikipedia article only if its text names the artist.
  * Facts shown come from Wikidata statements or the verbatim Wikipedia extract, each with a source.
  */
 class KnowledgeResolver(private val api: WikiApi) {
 
+    /**
+     * Artist and song are resolved independently. A failure in one (network, Wikidata error body, malformed response) becomes
+     * LOOKUP_FAILED for that card only; it is never reported as NOT_FOUND. If both fail, [LookupFailedException] is thrown so the
+     * caller can show one failure state (or fall back to a saved copy).
+     */
     suspend fun resolve(song: Song, chosenArtistQid: String? = null): Pair<Lookup, Lookup> {
-        val artist = resolveArtist(song.artist, chosenArtistQid)
-        val songLookup = resolveSong(song, artist)
+        val artist = guarded { resolveArtist(song.artist, chosenArtistQid) }
+        val songLookup = guarded { resolveSong(song, artist) }
+        if (artist.status == MatchStatus.LOOKUP_FAILED && songLookup.status == MatchStatus.LOOKUP_FAILED) {
+            throw LookupFailedException(artist.failure ?: KnowledgeResult.Kind.UNKNOWN)
+        }
         return artist to songLookup
+    }
+
+    private suspend fun guarded(block: suspend () -> Lookup): Lookup = try {
+        block()
+    } catch (e: kotlinx.coroutines.CancellationException) {
+        throw e
+    } catch (e: java.io.IOException) {
+        Lookup(MatchStatus.LOOKUP_FAILED, failure = e.lookupFailureKind() ?: KnowledgeResult.Kind.UNKNOWN)
     }
 
     // ---- Artist ---------------------------------------------------------------------------------------------
 
     suspend fun resolveArtist(name: String, chosenQid: String? = null): Lookup {
-        if (name.isBlank()) return Lookup(MatchStatus.NONE)
+        if (name.isBlank()) return Lookup(MatchStatus.NOT_FOUND)
         val ids: List<String> = if (chosenQid != null) listOf(chosenQid) else api.searchEntities(name).map { it.id }
-        if (ids.isEmpty()) return Lookup(MatchStatus.NONE)
+        if (ids.isEmpty()) return Lookup(MatchStatus.NOT_FOUND)
         val entities = api.entities(ids)
         val qualified = ids.mapNotNull { entities[it] }
             .filter { chosenQid != null || nameMatches(it, name) }
             .filter { isMusicalEntity(it) }
         return when {
-            qualified.isEmpty() -> Lookup(MatchStatus.NONE)
+            qualified.isEmpty() -> Lookup(MatchStatus.NOT_FOUND)
             qualified.size > 1 -> Lookup(
                 MatchStatus.AMBIGUOUS,
                 candidates = qualified.map { Candidate(it.id, it.label ?: name, it.description) },
@@ -104,7 +120,7 @@ class KnowledgeResolver(private val api: WikiApi) {
                 ),
             )
         }
-        return Lookup(MatchStatus.NONE)
+        return Lookup(MatchStatus.NOT_FOUND)
     }
 
     // ---- Building entities ----------------------------------------------------------------------------------
