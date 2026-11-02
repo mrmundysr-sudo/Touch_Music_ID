@@ -8,6 +8,10 @@ import kotlin.math.exp
  * halve medium ones, and require a second consistent measurement before a large jump (guards against a repeated chorus
  * or a false match). Silence holds the clock where the sound stopped and asks for a fresh fix on resume.
  * Silence is only a HEURISTIC for "paused": quiet passages also look like silence.
+ *
+ * Grok changes (2026-11-02):
+ * - Silence thresholds raised so ordinary quiet passages no longer freeze the highlight.
+ * - First few fixes after INIT are allowed to take larger steps without waiting for confirmation.
  */
 
 enum class SyncState { SEARCHING, FOLLOWING, HOLD, UNRELIABLE }
@@ -26,6 +30,8 @@ class SyncController(val clock: LyricClock = LyricClock(), private val cfg: Conf
         val staleMs: Double = 150_000.0,
         val maxContradictions: Int = 2,
         val confidenceTauMs: Double = 90_000.0,
+        /** How many agrees after INIT before we start requiring confirmation for large jumps. */
+        val earlyLockAgrees: Int = 3,
     )
 
     private data class Pending(val diffMs: Double, val atMono: Double)
@@ -83,6 +89,18 @@ class SyncController(val clock: LyricClock = LyricClock(), private val cfg: Conf
         }
 
         val ad = abs(diff)
+
+        // Early after lock-in, allow larger corrections without waiting for a second confirmation.
+        if (agreeCount < cfg.earlyLockAgrees && ad <= cfg.halfBelowMs * 2) {
+            val shift = if (ad <= cfg.halfBelowMs) diff / 2 else diff
+            clock.setAnchor(running + shift, fix.atMono, fix.rate)
+            contradictions = 0
+            pending = null
+            agreeCount++
+            lastVerifiedMono = fix.atMono
+            return log(fix.atMono, if (shift == diff) "EARLY_JUMP" else "EARLY_HALF", diff, shift)
+        }
+
         return when {
             ad <= cfg.ignoreBelowMs -> {
                 agreeCount++
