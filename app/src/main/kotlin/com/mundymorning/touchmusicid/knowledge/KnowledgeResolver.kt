@@ -133,6 +133,9 @@ class KnowledgeResolver(private val api: WikiApi) {
             refFact("Record label", P_LABEL, 3); refFact("Producer", P_PRODUCER, 3); refFact("Composer", P_COMPOSER, 3)
             refFact("Lyricist", P_LYRICIST, 3)
         }
+        // A person's birthplace and "formed in" are often the same place; show it once.
+        val origin = facts.firstOrNull { it.label == "Origin" }?.value
+        facts.removeAll { it.label == "Formed in" && it.value == origin }
         val summary = e.enwikiTitle?.let { api.summary(it) }?.takeUnless { it.isDisambiguation }
         return EntityKnowledge(
             qid = e.id,

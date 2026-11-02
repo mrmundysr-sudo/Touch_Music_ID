@@ -141,6 +141,17 @@ class KnowledgeResolverTest {
         assertEquals(MatchStatus.NONE, r.status)
     }
 
+    @Test fun sameBirthplaceAndFormationPlaceIsShownOnce() = runTest {
+        val p = entityJson(
+            "Q7542", "Prince", "American musician",
+            claims = mapOf("P31" to listOf("Q5"), "P106" to listOf("Q177220"), "P19" to listOf("Q84"), "P740" to listOf("Q84")),
+        )
+        val w = FakeWiki(mapOf("Q7542" to p, "Q84" to london), mapOf("Prince" to searchJson(Triple("Q7542", "Prince", null))))
+        val facts = KnowledgeResolver(WikiApi(w.http)).resolveArtist("Prince").entity!!.facts
+        assertEquals(1, facts.count { it.value == "London" })
+        assertTrue(facts.any { it.label == "Origin" })
+    }
+
     @Test fun blankArtistAssertsNothing() = runTest {
         assertEquals(MatchStatus.NONE, KnowledgeResolver(WikiApi(wiki().http)).resolveArtist("  ").status)
     }
