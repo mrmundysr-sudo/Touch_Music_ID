@@ -81,6 +81,38 @@ jobs:
           path: live.log
           if-no-files-found: ignore
 
+  lookup-diagnostics:
+    name: Lookup diagnostics (informational)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Accept SDK licenses and install platform
+        run: |
+          SDKM="$(command -v sdkmanager || find "$ANDROID_HOME" -name sdkmanager -type f | head -1)"
+          yes | "$SDKM" --licenses > /dev/null || true
+          "$SDKM" "platforms;android-35" "build-tools;34.0.0" > /dev/null
+      - name: Trace artists through the live lookup and characterise failure handling
+        shell: bash
+        run: |
+          set -o pipefail
+          LIVE_DIAG=1 ./gradlew --no-daemon testDebugUnitTest --tests '*LookupDiagnosticsLiveTest*' --tests '*LookupFailureCharacterizationTest*' -i 2>&1 | tee diag.log || true
+          {
+            echo '### Live lookup summary'; echo '```'; grep -h 'DIAGSUM' diag.log | sed 's/^ *//' || echo '(none)'; echo '```'
+            echo '### Failure-handling characterisation'; echo '```'; grep -h 'DIAGCHAR' diag.log | sed 's/^ *//' || echo '(none)'; echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          grep -E 'tests completed|FAILED|BUILD' diag.log | tail -5
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lookup-diagnostics-${{ github.run_number }}
+          path: diag.log
+          if-no-files-found: ignore
+
   build:
     name: Debug APK
     runs-on: ubuntu-latest
