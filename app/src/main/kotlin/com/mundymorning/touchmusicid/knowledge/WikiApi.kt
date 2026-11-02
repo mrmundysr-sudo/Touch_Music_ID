@@ -35,7 +35,7 @@ class WikiApi(
     suspend fun entities(ids: Collection<String>, full: Boolean = true): Map<String, WikidataEntity> {
         if (ids.isEmpty()) return emptyMap()
         val props = if (full) "labels|descriptions|aliases|claims|sitelinks" else "labels"
-        val url = "https://$wikidataHost/w/api.php?action=wbgetentities&ids=${ids.distinct().take(50).joinToString("|")}" +
+        val url = "https://$wikidataHost/w/api.php?action=wbgetentities&ids=${ids.distinct().take(50).joinToString("%7C")}" +
             "&props=${enc(props)}&languages=en&sitefilter=enwiki&format=json"
         return WikiParsers.parseEntities(checked(http.get(url)).body)
     }

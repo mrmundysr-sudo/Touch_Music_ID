@@ -40,6 +40,34 @@ jobs:
           path: app/build/reports/tests/testDebugUnitTest
           if-no-files-found: ignore
 
+  live-wiki:
+    name: Live Wikipedia/Wikidata smoke (informational)
+    runs-on: ubuntu-latest
+    continue-on-error: true   # real network; reports real-API behaviour without blocking the APK
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Accept SDK licenses and install platform
+        run: |
+          SDKM="$(command -v sdkmanager || find "$ANDROID_HOME" -name sdkmanager -type f | head -1)"
+          yes | "$SDKM" --licenses > /dev/null || true
+          "$SDKM" "platforms;android-35" "build-tools;34.0.0" > /dev/null
+      - name: Run live smoke test
+        shell: bash
+        run: |
+          set -o pipefail
+          LIVE_WIKI=1 ./gradlew --no-daemon testDebugUnitTest --tests '*LiveWikiSmokeTest*' -i 2>&1 | tee live.log
+          { echo '### Live Wikipedia/Wikidata smoke test'; echo '```'; grep 'LIVE-WIKI' live.log || echo '(no output)'; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: live-wiki-log-${{ github.run_number }}
+          path: live.log
+          if-no-files-found: ignore
+
   build:
     name: Debug APK
     runs-on: ubuntu-latest

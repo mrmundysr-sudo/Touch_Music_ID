@@ -69,7 +69,7 @@ class FakeWiki(
                 ok(entitySearch[term] ?: searchJson())
             }
             "action=wbgetentities" in url -> {
-                val ids = Regex("ids=([^&]*)").find(url)!!.groupValues[1].split("|")
+                val ids = java.net.URLDecoder.decode(Regex("ids=([^&]*)").find(url)!!.groupValues[1], "UTF-8").split("|")
                 ok(entitiesJson(*ids.mapNotNull { db[it] }.toTypedArray()))
             }
             "rest_v1/page/summary/" in url -> {
