@@ -12,36 +12,34 @@ import java.net.URLEncoder
 class LrclibClient(
     private val http: HttpFetcher,
     private val base: String = "https://lrclib.net/api",
-    private val userAgent: String = "TouchMusicID/0.1 (https://github.com/mrmundysr-sudo/Touch_Music_ID)",
 ) {
     suspend fun lookup(q: TrackQuery): LyricsResult? {
         val cleanedTitle = q.title.trim()
         val primaryArtist = q.artist.split(",", "&", "feat.", "ft.").firstOrNull()?.trim() ?: q.artist
 
-        // Prefer exact when possible
         if (q.durationSec != null && !q.album.isNullOrBlank()) {
             getExact(cleanedTitle, primaryArtist, q.album, q.durationSec)?.let { return it }
-            delay(300) // respect rate
+            delay(300)
         }
 
-        // Search by fields
         search("track_name=${enc(cleanedTitle)}&artist_name=${enc(primaryArtist)}")
             .firstOrNull()?.let { return it }
 
         delay(300)
-        // Free-text fallback
         return search("q=${enc("$primaryArtist $cleanedTitle")}").firstOrNull()
     }
 
     private suspend fun getExact(title: String, artist: String, album: String, duration: Double): LyricsResult? {
         val url = "$base/get?track_name=${enc(title)}&artist_name=${enc(artist)}&album_name=${enc(album)}&duration=${duration.toInt()}"
-        val body = http.get(url, userAgent) ?: return null
-        return parse(body)
+        val resp = http.get(url)
+        if (resp.code !in 200..299) return null
+        return parse(resp.body)
     }
 
     private suspend fun search(query: String): List<LyricsResult> {
-        val body = http.get("$base/search?$query", userAgent) ?: return emptyList()
-        val arr = try { org.json.JSONArray(body) } catch (_: Exception) { return emptyList() }
+        val resp = http.get("$base/search?$query")
+        if (resp.code !in 200..299) return emptyList()
+        val arr = try { org.json.JSONArray(resp.body) } catch (_: Exception) { return emptyList() }
         return (0 until arr.length()).mapNotNull { arr.optJSONObject(it)?.let(::parseObject) }
     }
 
