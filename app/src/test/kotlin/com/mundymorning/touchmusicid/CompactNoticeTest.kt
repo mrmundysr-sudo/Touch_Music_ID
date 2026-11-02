@@ -12,6 +12,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.height
 import com.mundymorning.touchmusicid.design.AssetSlot
 import com.mundymorning.touchmusicid.design.CompactNotice
 import com.mundymorning.touchmusicid.design.TmiButton
