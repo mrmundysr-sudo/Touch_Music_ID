@@ -99,8 +99,38 @@ jobs:
         run: .github/scripts/fetch-shazamkit.sh
       - name: Assemble debug APK
         env:
-          TOKEN_SERVICE_URL: ${{ vars.TOKEN_SERVICE_URL }}
-        run: ./gradlew --no-daemon assembleDebug ${TOKEN_SERVICE_URL:+-PTOKEN_SERVICE_URL=$TOKEN_SERVICE_URL}
+          # Public endpoint address, not a credential. The repo variable overrides the default if one is set.
+          TOKEN_SERVICE_URL: ${{ vars.TOKEN_SERVICE_URL || 'https://touch-music-id-token.mrmundysr.workers.dev/shazam-token' }}
+        run: ./gradlew --no-daemon assembleDebug -PTOKEN_SERVICE_URL="$TOKEN_SERVICE_URL"
+      - name: Verify what was built in (SDK linked, token URL set)
+        run: |
+          f="$(find app/build/generated -name BuildConfig.java -path '*debug*' | head -1)"
+          echo "BuildConfig: $f"
+          grep -E 'SHAZAMKIT_LINKED|TOKEN_SERVICE_URL' "$f" | tee bc.txt
+          grep -q 'SHAZAMKIT_LINKED = true' bc.txt || { echo "::error::ShazamKit AAR was not linked"; exit 1; }
+          grep -q 'TOKEN_SERVICE_URL = "https://.*/shazam-token"' bc.txt || { echo "::error::Token URL missing or malformed"; exit 1; }
+          unzip -l app/build/outputs/apk/debug/app-debug.apk | grep -E 'lib/arm64-v8a/.*(shazam|sig)' | head -3 || true
+          { echo '### Built-in configuration'; echo '```'; cat bc.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - name: Live token endpoint check (shape only, token never printed)
+        continue-on-error: true
+        env:
+          TOKEN_SERVICE_URL: ${{ vars.TOKEN_SERVICE_URL || 'https://touch-music-id-token.mrmundysr.workers.dev/shazam-token' }}
+        run: |
+          resp="$(curl -sS -m 30 -w '\n%{http_code}' "$TOKEN_SERVICE_URL")"
+          code="${resp##*$'\n'}"; json="${resp%$'\n'*}"
+          tok="$(printf '%s' "$json" | python3 -c 'import sys,json;print(json.load(sys.stdin).get("token",""))' 2>/dev/null || true)"
+          [ -n "$tok" ] && echo "::add-mask::$tok"
+          TOK="$tok" CODE="$code" python3 - <<'PY' | tee live.txt
+          import os,json,base64,time
+          t=os.environ["TOK"]; print("HTTP", os.environ["CODE"])
+          if t.count(".")==2:
+              d=lambda x: json.loads(base64.urlsafe_b64decode(x+"="*(-len(x)%4)))
+              h,c,s=t.split(".")
+              print("header",d(h)); cl=d(c); print("claims",cl); print("sig bytes",len(base64.urlsafe_b64decode(s+"="*(-len(s)%4))))
+              print("seconds until expiry",cl["exp"]-int(time.time()))
+          else: print("no JWT in response")
+          PY
+          { echo '### Live token endpoint (token redacted)'; echo '```'; cat live.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
       - name: Name and describe the APK
         run: |
           mkdir -p out
