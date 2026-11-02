@@ -1,0 +1,26 @@
+# Touch AutoBuild caller. Pinned to the reviewed hub commit (immutable SHA, tag v1.0.1); see autobuild/VERSIONING.md in touch-development.
+# Bump the SHA only through a reviewed PR.
+# Builds every claude/** branch push and manual dispatch.
+name: AutoBuild (dev branches)
+
+on:
+  push:
+    branches: ["claude/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: write   # ceiling only; the shared workflow's build job is read-only
+
+concurrency:
+  group: autobuild-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    uses: mrmundysr-sudo/touch-development/.github/workflows/android-build.yml@97ce9ff9e6e178052c3ac64f8a7a3ed1fdb1bf5c # v1.0.1
+    with:
+      artifact_name: Touch-Music-ID-debug-${{ github.run_number }}
+      java_version: "17"
+      project_dir: "."
+      gradle_version: "8.10.2"
+      sdk_packages: "platforms;android-35 build-tools;34.0.0 build-tools;35.0.0"
