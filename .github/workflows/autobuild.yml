@@ -173,6 +173,13 @@ jobs:
           # Public endpoint address, not a credential. The repo variable overrides the default if one is set.
           TOKEN_SERVICE_URL: ${{ vars.TOKEN_SERVICE_URL || 'https://touch-music-id-token.mrmundysr.workers.dev/shazam-token' }}
         run: ./gradlew --no-daemon assembleDebug -PTOKEN_SERVICE_URL="$TOKEN_SERVICE_URL"
+      - name: Release compile (proves the debug-only Lyrics Lab is absent from release)
+        run: |
+          ./gradlew --no-daemon compileReleaseKotlin
+          if find app/build -path '*elease*' \( -iname '*lyricsproto*' -o -name 'LyricsLab*' -o -name 'DebugLabEntry*' \) | grep -q 'lyricsproto\|LyricsLab'; then
+            echo "::error::Lyrics Lab classes found in a release build"; exit 1
+          fi
+          echo "release compiles; no lyricsproto classes in release output"
       - name: Verify what was built in (SDK linked, token URL set)
         run: |
           f="$(find app/build/generated -name BuildConfig.java -path '*debug*' | head -1)"

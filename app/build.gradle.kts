@@ -60,6 +60,7 @@ android {
     }
     sourceSets.getByName("main").java.srcDir(if (shazamKitLinked) "src/shazamkit/kotlin" else "src/noshazamkit/kotlin")
     // DEBUG-ONLY synchronized-lyrics prototype (src/debug) and its SDK-dependent probe. None of it is in release builds.
+    sourceSets.getByName("release").java.srcDir("src/release/kotlin") // empty DebugLabEntry stub: release has no debug tooling
     sourceSets.getByName("debug").java.srcDirs("src/debug/kotlin", if (shazamKitLinked) "src/debugShazamkit/kotlin" else "src/debugNoShazamkit/kotlin")
     packaging { resources.excludes += "/META-INF/{AL2.0,LGPL2.1}" }
 }

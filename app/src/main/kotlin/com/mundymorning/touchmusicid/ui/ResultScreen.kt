@@ -160,6 +160,7 @@ private fun LinkRow(item: LibrarySong) {
             "Links open a search for this song. Availability depends on each service.",
             style = MaterialTheme.typography.bodySmall, color = TmiColors.TextLow,
         )
+        DebugLabEntry() // debug builds only; emits nothing in release
     }
 }
 
