@@ -11,6 +11,8 @@ import com.mundymorning.touchmusicid.data.LibrarySong
 import com.mundymorning.touchmusicid.knowledge.Freshness
 import com.mundymorning.touchmusicid.knowledge.KnowledgeBundle
 import com.mundymorning.touchmusicid.knowledge.KnowledgeResult
+import com.mundymorning.touchmusicid.lyrics.LyricsUiState
+import com.mundymorning.touchmusicid.lyrics.TrackQuery
 import com.mundymorning.touchmusicid.recognition.EngineAvailability
 import com.mundymorning.touchmusicid.recognition.ListenState
 import com.mundymorning.touchmusicid.recognition.RecognitionController
@@ -31,7 +33,7 @@ sealed interface KnowledgeUi {
     data class Error(val kind: KnowledgeResult.Kind) : KnowledgeUi
 }
 
-data class ResultUi(val item: LibrarySong, val knowledge: KnowledgeUi)
+data class ResultUi(val item: LibrarySong, val knowledge: KnowledgeUi, val lyrics: LyricsUiState = LyricsUiState.Idle)
 
 /** What the platform tells the user about recognition right now (shown on Listen, Settings and Help). */
 data class RecognitionStatus(
@@ -45,6 +47,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val library = container.library
 
     val demoMode = container.settings.demoMode
+    val enableOnlineLyrics = container.settings.enableOnlineLyrics
 
     val controller = RecognitionController(
         scope = viewModelScope,
@@ -65,6 +68,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val _result = MutableStateFlow<ResultUi?>(null)
     val result: StateFlow<ResultUi?> = _result.asStateFlow()
     private var knowledgeJob: Job? = null
+    private var lyricsJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -103,7 +107,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         knowledgeJob?.cancel()
         knowledgeJob = viewModelScope.launch {
             val item = library.find(key) ?: run { _result.value = null; return@launch }
-            _result.value = ResultUi(item, KnowledgeUi.Loading)
+            _result.value = ResultUi(item, KnowledgeUi.Loading, LyricsUiState.Idle)
             load(item, force = false)
         }
     }
@@ -126,6 +130,25 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    fun loadLyrics() {
+        val current = _result.value ?: return
+        lyricsJob?.cancel()
+        lyricsJob = viewModelScope.launch {
+            _result.value = current.copy(lyrics = LyricsUiState.Loading)
+            val q = TrackQuery(current.item.song.title, current.item.song.artist, current.item.song.album)
+            val state = container.lyrics.load(current.item.song.key, q)
+            if (_result.value?.item?.song?.key == current.item.song.key) {
+                _result.value = _result.value?.copy(lyrics = state)
+            }
+        }
+    }
+
+    fun importLocalLrc(lrcText: String) {
+        val current = _result.value ?: return
+        container.lyrics.importLocal(current.item.song.key, lrcText)
+        loadLyrics()
+    }
+
     private suspend fun load(item: LibrarySong, force: Boolean) =
         applyKnowledge(item, container.knowledge.load(item.song, force))
 
@@ -134,7 +157,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             is KnowledgeResult.Found -> KnowledgeUi.Ready(r.bundle, r.freshness)
             is KnowledgeResult.Failed -> KnowledgeUi.Error(r.kind)
         }
-        if (_result.value?.item?.song?.key == item.song.key) _result.value = ResultUi(item, ui)
+        if (_result.value?.item?.song?.key == item.song.key) {
+            _result.value = _result.value?.copy(knowledge = ui) ?: ResultUi(item, ui)
+        }
     }
 
     fun toggleFavorite(item: LibrarySong, currentlyFavorite: Boolean) {
@@ -147,4 +172,5 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun clearDemoData() { viewModelScope.launch { library.clearDemoData() } }
     fun clearKnowledgeCache() { viewModelScope.launch { container.knowledgeCache.clear() } }
     fun setDemoMode(enabled: Boolean) = container.settings.setDemoMode(enabled)
+    fun setEnableOnlineLyrics(enabled: Boolean) = container.settings.setEnableOnlineLyrics(enabled)
 }
