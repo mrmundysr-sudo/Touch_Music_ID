@@ -156,6 +156,6 @@ class AppFlowScreenshotTest {
         compose.onNodeWithText("Setup guide").performClick(); settle()
         compose.onNodeWithText("What is blocked, and why").assertIsDisplayed()
         shot("10_setup_guide")
-        assertTrue(compose.onAllNodesWithText("Apple Developer Program", substring = true).fetchSemanticsNodes().isNotEmpty())
+        assertTrue(compose.onAllNodesWithText("Apple Developer account", substring = true).fetchSemanticsNodes().isNotEmpty())
     }
 }

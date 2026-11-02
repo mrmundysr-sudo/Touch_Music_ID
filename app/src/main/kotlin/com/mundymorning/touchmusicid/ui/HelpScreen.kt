@@ -47,12 +47,12 @@ fun HelpScreen(onBack: () -> Unit) {
                 "What is blocked, and why",
                 "Real song recognition. It needs two things this build does not have:\n" +
                     "1. Apple's ShazamKit for Android SDK. Apple distributes it as an AAR download from the developer site, so it is not bundled here.\n" +
-                    "2. A developer token. Apple requires a short-lived signed token that comes from an Apple Developer Program membership (a regular Apple ID isn't enough) and a private key kept on a server, never in the app.\n\n" +
+                    "2. A developer token. Apple's ShazamKit documentation says the token is created from a media identifier and private key made in your Apple Developer account, then signed on a server you control. Apple's page doesn't say whether a free Apple ID is enough, so check that in Apple's developer portal. The key must never be placed in the app.\n\n" +
                     "Until both exist, the Listen button reports “not set up” and never invents a match.",
             )
             Card(
                 "To switch on live recognition",
-                "1. Join the Apple Developer Program and create a Media ID and private key.\n" +
+                "1. In your Apple Developer account, create a media identifier and private key (Apple: “Create a media identifier and private key”).\n" +
                     "2. Deploy a small token service that signs short-lived tokens with that key (reference design in docs/TOKEN_SERVICE.md).\n" +
                     "3. Download Apple's ShazamKit Android AAR into app/libs and add the engine described in docs/SHAZAMKIT_SETUP.md.\n" +
                     "4. Build with -PTOKEN_SERVICE_URL=https://your-service.example/token\n" +
