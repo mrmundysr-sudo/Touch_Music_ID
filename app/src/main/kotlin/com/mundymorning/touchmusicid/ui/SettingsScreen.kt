@@ -36,6 +36,7 @@ import com.mundymorning.touchmusicid.knowledge.ATTRIBUTION_WIKIPEDIA
 @Composable
 fun SettingsScreen(vm: MainViewModel, onOpenHelp: () -> Unit) {
     val demo by vm.demoMode.collectAsStateWithLifecycle()
+    val onlineLyrics by vm.enableOnlineLyrics.collectAsStateWithLifecycle()
     val ctx = LocalContext.current
     val status = vm.recognitionStatus()
 
@@ -68,12 +69,36 @@ fun SettingsScreen(vm: MainViewModel, onOpenHelp: () -> Unit) {
         }
 
         GlassCard {
+            Section("Lyrics")
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("Enable Online Lyrics", style = MaterialTheme.typography.titleMedium, color = TmiColors.TextHigh)
+                    Text(
+                        "Fetch synced lyrics on demand from LRCLIB when a song is identified. Off by default. Disabled in public release builds pending licensing review. Local LRC files work independently.",
+                        style = MaterialTheme.typography.bodySmall, color = TmiColors.TextMedium,
+                    )
+                }
+                Switch(
+                    checked = onlineLyrics && BuildConfig.DEBUG,
+                    onCheckedChange = { if (BuildConfig.DEBUG) vm.setEnableOnlineLyrics(it) },
+                    enabled = BuildConfig.DEBUG,
+                    modifier = Modifier.semantics { stateDescription = if (onlineLyrics) "On" else "Off" },
+                    colors = SwitchDefaults.colors(checkedTrackColor = TmiColors.Primary, checkedThumbColor = TmiColors.OnPrimary),
+                )
+            }
+            if (!BuildConfig.DEBUG) {
+                Text("Online lyrics are disabled in this build.", style = MaterialTheme.typography.bodySmall, color = TmiColors.Warm)
+            }
+        }
+
+        GlassCard {
             Section("Privacy")
             Text(
                 "• The microphone is used only while you've tapped Listen, and stops when you cancel, leave the app, or a match arrives.\n" +
                     "• Raw audio is never saved or uploaded by this app.\n" +
                     "• History and favorites live only on this phone. No account, no analytics, no ads.\n" +
-                    "• Looking up a song sends only its title and artist names to Wikipedia and Wikidata.",
+                    "• Looking up a song sends only its title and artist names to Wikipedia and Wikidata.\n" +
+                    "• Online lyrics (when enabled) send only title and artist to LRCLIB. No permanent lyrics library is stored.",
                 style = MaterialTheme.typography.bodyMedium, color = TmiColors.TextMedium,
             )
         }
