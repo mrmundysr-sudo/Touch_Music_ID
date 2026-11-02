@@ -1,8 +1,9 @@
 # Lessons learned (verified)
 
-1. **A public repo cannot call a reusable workflow in a private repo.** The first AutoBuild run failed instantly with zero jobs. The hub
-   `touch-development` is private today (live repo list) although its own rollout docs list it as public. Verified by the fix: a
-   self-contained workflow built successfully (runs 2–4). *Studio-wide:* every public caller is likely affected. Flagged for owner review; not changed elsewhere.
+1. **Likely: a public repo cannot call a reusable workflow in a private repo.** The first AutoBuild run failed instantly with zero jobs. The hub
+   `touch-development` is private today (live repo list) although its own rollout docs list it as public, and Touch_Music_ID is public. **The failure annotation
+   was not retrievable with the available tools, so the cause is inferred, not confirmed.** What is confirmed: a self-contained workflow built successfully
+   (runs 2 onward). *Studio-wide:* other public callers may be affected. Flagged for owner review; nothing changed elsewhere.
 2. **`android-actions/setup-android@v3` failed on `ubuntu-latest`** ("Failed to find package 'tools'"). The runner already has an SDK; accepting licences and
    installing the needed platform with the runner's `sdkmanager` works.
 3. **Compose/Robolectric tests:** (a) `advanceUntilIdle()` ignores `backgroundScope` work, so a controller launched there looks stuck; (b) `LaunchedEffect` delays need
