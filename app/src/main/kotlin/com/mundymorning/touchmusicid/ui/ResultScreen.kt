@@ -234,7 +234,7 @@ private fun LookupSection(title: String, subject: String, lookup: Lookup, onChoo
                 "No verified article for “$subject”",
                 "We checked, and no Wikipedia or Wikidata entry passed our name and type checks. Nothing here is guessed.",
             ) {
-                TmiButton("Search Wikipedia", { ExternalLinks.open(ctx, ExternalLinks.wikipediaSearchUrl(subject)) }, Modifier.weight(1f), primary = false, compact = true, icon = Icons.Filled.Search)
+                TmiButton("Search Wikipedia", { ExternalLinks.open(ctx, ExternalLinks.wikipediaSearchUrl(subject)) }, Modifier.weight(1f), primary = false, compact = true)
                 TmiButton("Check again", onRetry, Modifier.weight(1f), primary = false, compact = true, icon = Icons.Filled.Refresh)
             }
         }
