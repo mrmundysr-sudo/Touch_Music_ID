@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- DEBUG BUILDS ONLY: the synchronized-lyrics prototype. A second launcher icon, fully separate from the main UI. -->
+    <application>
+        <activity
+            android:name="com.mundymorning.touchmusicid.lyricsproto.LyricsLabActivity"
+            android:exported="true"
+            android:label="Lyrics Lab (debug)"
+            android:screenOrientation="portrait"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:theme="@style/Theme.TouchMusicId">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

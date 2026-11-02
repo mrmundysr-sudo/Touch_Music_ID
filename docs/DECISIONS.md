@@ -30,3 +30,5 @@ Still open (unchanged): exact ShazamKit SDK licence/redistribution, token-servic
 
 
 - DEC-019 Proposed: Real engine uses ShazamKit streaming sessions (first match wins, 12 s mic budget, silence reported separately). SDK types live only in `src/shazamkit`; builds without the AAR still work. Token claims in `backend/token-service` are unverified against Apple. Artwork loads only from https Apple/Shazam hosts.
+
+- DEC-020 Proposed: A debug-only "Lyrics Lab" prototype (src/debug) tests ShazamKit-driven synchronized lyrics with LRCLIB, MusicBrainz and iTunes (free, identified, rate-limited). It is absent from release builds. LRCLIB lyrics are unlicensed for commercial distribution, so no lyrics feature ships until that is resolved. Production recognition is unchanged.
