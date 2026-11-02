@@ -9,6 +9,8 @@ import com.mundymorning.touchmusicid.data.SettingsStore
 import com.mundymorning.touchmusicid.knowledge.KnowledgeRepository
 import com.mundymorning.touchmusicid.knowledge.KnowledgeResolver
 import com.mundymorning.touchmusicid.knowledge.WikiApi
+import com.mundymorning.touchmusicid.lyrics.LocalLrcStore
+import com.mundymorning.touchmusicid.lyrics.LyricsRepository
 import com.mundymorning.touchmusicid.net.HttpFetcher
 import com.mundymorning.touchmusicid.net.UrlConnectionFetcher
 import com.mundymorning.touchmusicid.recognition.EngineProvider
@@ -34,6 +36,7 @@ class AppContainer(
     val settings = SettingsStore(app)
     val knowledge = KnowledgeRepository(KnowledgeResolver(WikiApi(http)), RoomKnowledgeCache(db.dao()))
     val knowledgeCache = RoomKnowledgeCache(db.dao())
+    val lyrics = LyricsRepository(settings, LocalLrcStore(), http)
     val engines = engineProvider ?: RemoteTokenSource(BuildConfig.TOKEN_SERVICE_URL, http).let { tokens ->
         val backend = ShazamKitBindings.backend()
         EngineProvider(
