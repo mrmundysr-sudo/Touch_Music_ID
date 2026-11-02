@@ -31,7 +31,7 @@ Native Kotlin + Compose (Material 3) + Room, minSdk 24 / target 35.
 | Local `./gradlew testDebugUnitTest` at the source commit | 76 tests, 73 run, 3 skipped (opt-in live), **0 failed** |
 | Local `assembleDebug` | success |
 | CI run 6 (`71d32c4`): unit tests, debug APK, live Wikipedia/Wikidata smoke | all three jobs success; live output below |
-| CI run 8 (source commit `1c48530`) | see BRANCH_STATUS.md / final report |
+| CI run 8 (source commit `1c48530`): unit tests, live smoke, debug APK | all three jobs **success** (artifact `Touch-Music-ID-debug-8`) |
 
 **Live API evidence (CI run 6, GitHub runner):** Queen → VERIFIED (Q15862; formed 1970, London, genres, labels; extract + article link). Bohemian Rhapsody → VERIFIED (Q187745; released 1975-10-31; A Night at the Opera; producer Roy Thomas Baker; composer/lyricist Freddie Mercury). Prince → VERIFIED single musician (Q7542). Nonsense song/artist → NONE (nothing asserted). The dev sandbox itself cannot reach Wikipedia/Wikidata (network policy), so this evidence comes only from CI.
 The live run found one cosmetic defect (duplicate "Origin"/"Formed in" for a person); fixed in the source commit with a test.
@@ -62,3 +62,6 @@ See `LESSONS_LEARNED.md`. Flag for owner review: **public repos cannot use the p
 1. Owner installs the APK on a phone and runs the checklist in the final message / README; report issues.
 2. Decide DEC-012..018 and the hub-visibility question.
 3. If proceeding: Apple credentials → token service → link AAR → compile adapter template → real-device test matrix (SHAZAMKIT_SETUP).
+
+## Delivered APK
+`touch-music-id-debug-1c48530-local.apk`, **LOCAL** build (clean worktree of `1c48530` via the hub's `deliver_apk.sh`; the CI artifact is not downloadable from the cloud session, per APK-DELIVERY.md). 10.3 MB, sha256 prefix `492be86c90486677`. Validated: package `com.mundymorning.touchmusicid.debug`, launchable activity, signature, `classes.dex`. **Not tested on a device.** Does not include the later docs-only commits.

@@ -19,7 +19,7 @@
 | [#1](https://github.com/mrmundysr-sudo/Touch_Music_ID/actions/runs/41384170213) | `5f15dbf` | **failed at startup, 0 jobs** (hub reusable workflow; cause inferred: public repo → private hub) |
 | [#2](https://github.com/mrmundysr-sudo/Touch_Music_ID/actions/runs/41384578939) | `256a622` | success (self-contained workflow) |
 | [#6](https://github.com/mrmundysr-sudo/Touch_Music_ID/actions/runs/41387059607) | `71d32c4` | success: unit tests, APK, live Wikipedia smoke (real-API output in log) |
-| [#8](https://github.com/mrmundysr-sudo/Touch_Music_ID/actions/runs/41387637765) | `1c48530` (source commit) | see final report / Actions page |
+| [#8](https://github.com/mrmundysr-sudo/Touch_Music_ID/actions/runs/41387637765) | `1c48530` (source commit) | **success**: Unit tests, Live Wikipedia smoke, Debug APK (artifact `Touch-Music-ID-debug-8`) |
 
 ## Mandatory session startup
 1. Confirm repo and default branch. 2. Read this file, CLAUDE.md, plan, decisions, `docs/knowledge/`. 3. Enumerate branches/PRs, fetch remote refs.
