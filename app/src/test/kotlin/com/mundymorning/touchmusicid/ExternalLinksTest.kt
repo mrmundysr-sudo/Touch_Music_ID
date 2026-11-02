@@ -170,4 +170,15 @@ class ExternalLinksTest {
         assertEquals("https://music.apple.com/search?term=Uptown%20Funk%20Mark%20Ronson%20feat.%20Bruno%20Mars", ExternalLinks.url(Service.APPLE_MUSIC, multi))
         assertEquals("https://www.youtube.com/results?search_query=Uptown%20Funk%20Mark%20Ronson%20feat.%20Bruno%20Mars", ExternalLinks.url(Service.YOUTUBE, multi))
     }
+
+    @Test fun copySearchTextPutsTitleAndArtistOnTheClipboard() {
+        val ctx = ApplicationProvider.getApplicationContext<Context>()
+        for (t in tricky) {
+            val copied = ExternalLinks.copySearchText(ctx, t)
+            assertEquals(ExternalLinks.searchText(t), copied)
+            val cm = ctx.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+            assertEquals(ExternalLinks.searchText(t), cm.primaryClip!!.getItemAt(0).text.toString())
+        }
+        assertEquals("Don't Stop Believin' Journey", ExternalLinks.copySearchText(ctx, tricky[0]))
+    }
 }

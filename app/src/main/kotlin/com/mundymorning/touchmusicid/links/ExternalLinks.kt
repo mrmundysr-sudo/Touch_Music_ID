@@ -89,6 +89,20 @@ object ExternalLinks {
         (step.uri.startsWith("spotify:search:") && step.packageName == SPOTIFY_PACKAGE) ||
             (step.packageName == null && isAllowed(Service.SPOTIFY, step.uri))
 
+    /**
+     * Spotify offers no supported way to prefill its search from outside (the app and the mobile web page both ignore or drop the
+     * query on many devices), so the text is also put on the clipboard. The user can paste it. Returns the copied text, or null if
+     * the clipboard is unavailable. Written only on an explicit tap, never read.
+     */
+    fun copySearchText(context: Context, song: Song): String? {
+        val text = searchText(song)
+        return try {
+            val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager ?: return null
+            cm.setPrimaryClip(android.content.ClipData.newPlainText("Song search", text))
+            text
+        } catch (e: RuntimeException) { null }
+    }
+
     /** Tries each step in order and stops at the first the device can handle. Returns false only if none could. */
     fun openSpotify(context: Context, song: Song, verifiedTrackUrl: String? = null): Boolean {
         for (step in spotifyPlan(song, verifiedTrackUrl)) {

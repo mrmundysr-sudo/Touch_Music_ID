@@ -142,6 +142,12 @@ private fun LinkRow(item: LibrarySong) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Service.entries.forEach { svc ->
                 TmiButton(svc.label, {
+                    if (svc == Service.SPOTIFY) {
+                        // Spotify often ignores the query, so make pasting it one gesture away.
+                        ExternalLinks.copySearchText(ctx, item.song)?.let {
+                            Toast.makeText(ctx, "Copied “$it”. If Spotify's search is empty, paste it.", Toast.LENGTH_LONG).show()
+                        }
+                    }
                     val opened = if (svc == Service.SPOTIFY) ExternalLinks.openSpotify(ctx, item.song)
                     else ExternalLinks.open(ctx, ExternalLinks.url(svc, item.song))
                     if (!opened) {
