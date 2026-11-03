@@ -95,4 +95,4 @@ jobs:
           api-key-id: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           api-private-key: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
           uses-non-exempt-encryption: 'false'
-          wait-for-processing: 'false'
+          wait-for-processing: 'true'
