@@ -9,6 +9,14 @@ class SyncControllerTest {
     private fun ctl() = SyncController()
     private fun SyncController.pos(at: Double) = clock.positionMs(at)
 
+    private fun SyncController.exitEarlyPhase() {
+        // Perform enough agreements to leave the earlyLockAgrees window
+        onFix(fix(10_000.0, 0.0))
+        onFix(fix(20_050.0, 10_000.0))
+        onFix(fix(30_050.0, 20_000.0))
+        onFix(fix(40_050.0, 30_000.0))
+    }
+
     @Test fun identifiedHalfwayThroughStartsAtTheMeasuredPositionNotAtZero() {
         val c = ctl()
         assertEquals("INIT", c.onFix(fix(83_412.0, 1_000.0)).kind)
@@ -20,53 +28,53 @@ class SyncControllerTest {
     }
 
     @Test fun smallDisagreementsAreIgnored() {
-        val c = ctl(); c.onFix(fix(10_000.0, 0.0))
-        val e = c.onFix(fix(30_100.0, 20_000.0)) // running says 30_000, diff +100
+        val c = ctl(); c.exitEarlyPhase()
+        val e = c.onFix(fix(50_100.0, 40_000.0)) // running says 50_000, diff +100
         assertEquals("AGREE", e.kind)
-        assertEquals(30_000.0, c.pos(20_000.0)!!, 0.001)
+        assertEquals(50_000.0, c.pos(40_000.0)!!, 0.001)
     }
 
     @Test fun mediumDisagreementsAreCorrectedByHalf() {
-        val c = ctl(); c.onFix(fix(10_000.0, 0.0))
-        val e = c.onFix(fix(31_000.0, 20_000.0)) // diff +1000
+        val c = ctl(); c.exitEarlyPhase()
+        val e = c.onFix(fix(51_000.0, 40_000.0)) // diff +1000
         assertEquals("HALF", e.kind); assertEquals(500.0, e.appliedMs, 0.001)
-        assertEquals(30_500.0, c.pos(20_000.0)!!, 0.001)
+        assertEquals(50_500.0, c.pos(40_000.0)!!, 0.001)
     }
 
     @Test fun aLargeJumpNeedsASecondConsistentMeasurement() {
-        val c = ctl(); c.onFix(fix(10_000.0, 0.0))
-        val first = c.onFix(fix(50_000.0, 20_000.0)) // diff +20_000
+        val c = ctl(); c.exitEarlyPhase()
+        val first = c.onFix(fix(70_000.0, 40_000.0)) // diff +20_000
         assertEquals("PENDING", first.kind)
-        assertEquals("position must not move on a single large outlier", 30_000.0, c.pos(20_000.0)!!, 0.001)
-        val second = c.onFix(fix(50_000.0 + 8_300.0, 28_000.0)) // running is 38_000 -> diff +20_300, within 1_500 of the first
+        assertEquals("position must not move on a single large outlier", 50_000.0, c.pos(40_000.0)!!, 0.001)
+        val second = c.onFix(fix(70_000.0 + 8_300.0, 48_000.0))
         assertEquals("JUMP", second.kind)
-        assertEquals(58_300.0, c.pos(28_000.0)!!, 0.001)
+        assertEquals(78_300.0, c.pos(48_000.0)!!, 0.001)
         assertEquals(SyncState.FOLLOWING, c.state)
     }
 
     @Test fun aSingleFalseMatchFromARepeatedChorusIsDiscardedOnceTheNextFixAgrees() {
-        val c = ctl(); c.onFix(fix(10_000.0, 0.0))
-        assertEquals("PENDING", c.onFix(fix(70_000.0, 20_000.0)).kind) // chorus repeat 40 s away
-        assertEquals("AGREE", c.onFix(fix(40_050.0, 30_000.0)).kind)  // running 40_000: true position confirmed
+        val c = ctl(); c.exitEarlyPhase()
+        assertEquals("PENDING", c.onFix(fix(90_000.0, 40_000.0)).kind)
+        assertEquals("AGREE", c.onFix(fix(60_050.0, 50_000.0)).kind)
         assertFalse(c.hasPending)
-        assertEquals(40_000.0, c.pos(30_000.0)!!, 0.001)
+        assertEquals(60_000.0, c.pos(50_000.0)!!, 0.001)
     }
 
     @Test fun repeatedContradictionsEndInUnreliableAndALaterGoodFixRecovers() {
-        val c = ctl(); c.onFix(fix(10_000.0, 0.0))
-        c.onFix(fix(50_000.0, 10_000.0))     // pending (diff +30_000)
-        c.onFix(fix(90_000.0, 20_000.0))     // inconsistent -> contradictions 1
-        c.onFix(fix(20_000.0, 30_000.0))     // inconsistent again -> contradictions 2
+        val c = ctl(); c.exitEarlyPhase()
+        c.onFix(fix(90_000.0, 40_000.0))
+        c.onFix(fix(130_000.0, 50_000.0))
+        c.onFix(fix(60_000.0, 60_000.0))
         assertEquals(SyncState.UNRELIABLE, c.state)
-        assertEquals(0.0, c.confidence(30_000.0), 0.0)
-        val e = c.onFix(fix(41_000.0, 40_000.0))
+        assertEquals(0.0, c.confidence(60_000.0), 0.0)
+        val e = c.onFix(fix(71_000.0, 70_000.0))
         assertEquals("RECOVER", e.kind); assertEquals(SyncState.FOLLOWING, c.state)
-        assertEquals(41_000.0, c.pos(40_000.0)!!, 0.001)
+        assertEquals(71_000.0, c.pos(70_000.0)!!, 0.001)
     }
 
     @Test fun sustainedSilenceHoldsThePositionAndSoundResumesFromThere() {
         val c = ctl(); c.onFix(fix(10_000.0, 0.0))
-        c.onSilenceStart(5_000.0) // quiet began when position was 15_000
+        c.onSilenceStart(5_000.0)
         assertEquals(SyncState.HOLD, c.state)
         assertEquals(15_000.0, c.pos(9_000.0)!!, 0.001)
         assertEquals(15_000.0, c.pos(60_000.0)!!, 0.001)
@@ -74,7 +82,6 @@ class SyncControllerTest {
         c.onSoundResume(60_000.0)
         assertEquals(SyncState.FOLLOWING, c.state)
         assertEquals("resumes from the parked position", 15_500.0, c.pos(60_500.0)!!, 0.001)
-        // The first fix after a pause replaces the anchor outright, however far it is (the user may have sought while paused).
         val e = c.onFix(fix(120_000.0, 62_000.0))
         assertEquals("RESUME", e.kind); assertEquals(120_000.0, c.pos(62_000.0)!!, 0.001)
     }
@@ -98,7 +105,7 @@ class SyncControllerTest {
         val c3 = c.confidence(20_000.0)
         assertTrue("$c1 < $c3", c1 < c3)
         assertTrue("decays with age", c.confidence(100_000.0) < c3)
-        c.onFix(fix(80_000.0, 21_000.0)) // large, unconfirmed
+        c.onFix(fix(80_000.0, 21_000.0))
         assertTrue("a pending dispute lowers confidence", c.confidence(21_000.0) < c3)
     }
 
@@ -117,7 +124,7 @@ class SyncControllerTest {
     @Test fun requireFreshFixReplacesTheAnchorWithoutDamping() {
         val c = ctl(); c.onFix(fix(10_000.0, 0.0))
         c.requireFreshFix()
-        assertEquals("RESUME", c.onFix(fix(31_000.0, 20_000.0)).kind) // would have been HALF
+        assertEquals("RESUME", c.onFix(fix(31_000.0, 20_000.0)).kind)
         assertEquals(31_000.0, c.pos(20_000.0)!!, 0.001)
     }
 
