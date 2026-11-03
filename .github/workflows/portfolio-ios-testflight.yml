@@ -83,6 +83,31 @@ jobs:
           ISSUER_ID: ${{ secrets.APPLE_SIGNING_ISSUER_ID }}
         run: |
           xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/App.xcarchive" -exportPath "$RUNNER_TEMP/export" -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" -allowProvisioningUpdates -authenticationKeyPath "$API_KEY_PATH" -authenticationKeyID "$API_KEY_ID" -authenticationKeyIssuerID "$ISSUER_ID"
+      - name: Check out TestFlight metadata helper
+        uses: actions/checkout@v4
+        with:
+          repository: Apple-Actions/upload-testflight-build
+          ref: 665328adbecbc3ad929d3da710696d928b8a7ba9
+          path: testflight-helper
+          persist-credentials: false
+      - name: Populate TestFlight Test Information
+        env:
+          API_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
+          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          test -n "$API_PRIVATE_KEY" || exit 1
+          test -n "$API_KEY_ID" || exit 1
+          test -n "$ISSUER_ID" || exit 1
+          key_path="$RUNNER_TEMP/private_keys/AuthKey_${API_KEY_ID}.p8"
+          printf '%s' "$API_PRIVATE_KEY" > "$key_path"
+          trap 'rm -f "$key_path"' EXIT
+          ./testflight-helper/scripts/populate-test-information.sh \
+            --dir app-source \
+            --apply \
+            --issuer-id "$ISSUER_ID" \
+            --api-key-id "$API_KEY_ID" \
+            --api-private-key-path "$key_path"
       - name: Upload to TestFlight
         uses: apple-actions/upload-testflight-build@v5
         with:
