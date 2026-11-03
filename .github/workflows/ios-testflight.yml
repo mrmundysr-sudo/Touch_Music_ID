@@ -18,10 +18,10 @@ jobs:
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode.app
 
-      - name: Write App Store Connect API key
+      - name: Write Admin App Store Connect API key (signing)
         env:
-          API_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
-          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          API_PRIVATE_KEY: ${{ secrets.APPLE_SIGNING_PRIVATE_KEY }}
+          API_KEY_ID: ${{ secrets.APPLE_SIGNING_KEY_ID }}
         run: |
           mkdir -p "$RUNNER_TEMP/private_keys"
           # Write key without echoing content
@@ -64,10 +64,10 @@ jobs:
             DEVELOPMENT_TEAM=2M956232BT \
             clean
 
-      - name: Export IPA with cloud-managed signing
+      - name: Export IPA with Admin cloud-managed signing
         env:
-          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          API_KEY_ID: ${{ secrets.APPLE_SIGNING_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APPLE_SIGNING_ISSUER_ID }}
         run: |
           xcodebuild -exportArchive \
             -archivePath "$RUNNER_TEMP/TouchMusicID.xcarchive" \
@@ -78,7 +78,7 @@ jobs:
             -authenticationKeyID "$API_KEY_ID" \
             -authenticationKeyIssuerID "$ISSUER_ID"
 
-      - name: Upload to TestFlight
+      - name: Upload to TestFlight (App Manager credentials)
         uses: apple-actions/upload-testflight-build@v5
         with:
           app-path: ${{ runner.temp }}/export/TouchMusicID.ipa
