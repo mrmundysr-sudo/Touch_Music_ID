@@ -1,0 +1,91 @@
+# Manually triggered TestFlight build for Touch Music ID.
+# Signing uses Admin APPLE_SIGNING_* secrets; upload uses App Manager credentials.
+# Always checks out grok/ios-testflight so iOS code stays on that branch.
+name: iOS TestFlight
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-upload:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: grok/ios-testflight
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Write Admin App Store Connect API key (signing)
+        env:
+          API_PRIVATE_KEY: ${{ secrets.APPLE_SIGNING_PRIVATE_KEY }}
+          API_KEY_ID: ${{ secrets.APPLE_SIGNING_KEY_ID }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/private_keys"
+          # Write key without echoing content
+          printf '%s' "$API_PRIVATE_KEY" > "$RUNNER_TEMP/private_keys/AuthKey_${API_KEY_ID}.p8"
+          echo "API_KEY_PATH=$RUNNER_TEMP/private_keys/AuthKey_${API_KEY_ID}.p8" >> "$GITHUB_ENV"
+
+      - name: Create ExportOptions.plist
+        run: |
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store-connect</string>
+            <key>signingStyle</key>
+            <string>automatic</string>
+            <key>teamID</key>
+            <string>2M956232BT</string>
+            <key>destination</key>
+            <string>export</string>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>manageAppVersionAndBuildNumber</key>
+            <false/>
+          </dict>
+          </plist>
+          EOF
+
+      - name: Archive (unsigned)
+        run: |
+          xcodebuild archive \
+            -project TouchMusicID.xcodeproj \
+            -scheme TouchMusicID \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/TouchMusicID.xcarchive" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            DEVELOPMENT_TEAM=2M956232BT \
+            clean
+
+      - name: Export IPA with Admin cloud-managed signing
+        env:
+          API_KEY_ID: ${{ secrets.APPLE_SIGNING_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APPLE_SIGNING_ISSUER_ID }}
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/TouchMusicID.xcarchive" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "${{ env.API_KEY_PATH }}" \
+            -authenticationKeyID "$API_KEY_ID" \
+            -authenticationKeyIssuerID "$ISSUER_ID"
+
+      - name: Upload to TestFlight (App Manager credentials)
+        uses: apple-actions/upload-testflight-build@v5
+        with:
+          app-path: ${{ runner.temp }}/export/TouchMusicID.ipa
+          issuer-id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          api-key-id: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          api-private-key: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
+          uses-non-exempt-encryption: 'false'
