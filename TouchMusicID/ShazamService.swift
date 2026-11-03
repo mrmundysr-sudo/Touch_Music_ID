@@ -9,9 +9,10 @@ final class ShazamService: NSObject, ObservableObject, SHSessionDelegate {
     @Published var title: String = "Touch Music ID"
     @Published var artist: String = "Tap to identify"
     @Published var artwork: UIImage?
-    @Published var accentColor: Color = .blue
+    @Published var accentColor: Color = Color(red: 0.369, green: 0.918, blue: 0.831) // teal
     @Published var isListening = false
     @Published var errorMessage: String?
+    @Published var appleMusicURL: URL?
 
     private var session: SHSession?
     private var audioEngine: AVAudioEngine?
@@ -83,6 +84,7 @@ final class ShazamService: NSObject, ObservableObject, SHSessionDelegate {
             self.title = item.title ?? "Unknown Title"
             self.artist = item.artist ?? "Unknown Artist"
             self.errorMessage = nil
+            self.appleMusicURL = item.appleMusicURL
 
             if let artworkURL = item.artworkURL {
                 await self.loadArtwork(from: artworkURL)
@@ -105,12 +107,25 @@ final class ShazamService: NSObject, ObservableObject, SHSessionDelegate {
                 self.accentColor = extractAccent(from: image)
             }
         } catch {
-            // Artwork is optional; keep the gradient fallback
+            // Artwork is optional
         }
     }
 
     private func extractAccent(from image: UIImage) -> Color {
-        // Simple fallback accent; real Palette extraction can be added later
-        Color(red: 0.3, green: 0.6, blue: 1.0)
+        // Simple average of center region for a usable accent; falls back to teal
+        guard let cg = image.cgImage else { return Color(red: 0.369, green: 0.918, blue: 0.831) }
+        let size = 32
+        let context = CGContext(data: nil, width: size, height: size, bitsPerComponent: 8, bytesPerRow: size * 4, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        context?.draw(cg, in: CGRect(x: 0, y: 0, width: size, height: size))
+        guard let data = context?.data else { return Color(red: 0.369, green: 0.918, blue: 0.831) }
+        let ptr = data.bindMemory(to: UInt8.self, capacity: size * size * 4)
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0
+        let count = size * size
+        for i in 0..<count {
+            r += CGFloat(ptr[i*4]) / 255
+            g += CGFloat(ptr[i*4+1]) / 255
+            b += CGFloat(ptr[i*4+2]) / 255
+        }
+        return Color(red: Double(r/CGFloat(count)), green: Double(g/CGFloat(count)), blue: Double(b/CGFloat(count)))
     }
 }
