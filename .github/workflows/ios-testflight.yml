@@ -31,6 +31,11 @@ jobs:
           printf '%s' "$API_PRIVATE_KEY" > "$RUNNER_TEMP/private_keys/AuthKey_${API_KEY_ID}.p8"
           echo "API_KEY_PATH=$RUNNER_TEMP/private_keys/AuthKey_${API_KEY_ID}.p8" >> "$GITHUB_ENV"
 
+      - name: Inject export compliance key
+        run: |
+          /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" TouchMusicID/Info.plist || \
+          /usr/libexec/PlistBuddy -c "Set :ITSAppUsesNonExemptEncryption false" TouchMusicID/Info.plist
+
       - name: Create ExportOptions.plist
         run: |
           cat > "$RUNNER_TEMP/ExportOptions.plist" <<'EOF'
@@ -65,6 +70,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             DEVELOPMENT_TEAM=2M956232BT \
+            CURRENT_PROJECT_VERSION=${{ github.run_number }} \
             clean
 
       - name: Export IPA with Admin cloud-managed signing
@@ -89,3 +95,4 @@ jobs:
           api-key-id: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           api-private-key: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
           uses-non-exempt-encryption: 'false'
+          wait-for-processing: 'false'
