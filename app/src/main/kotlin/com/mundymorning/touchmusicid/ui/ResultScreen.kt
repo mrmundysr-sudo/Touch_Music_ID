@@ -5,12 +5,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
@@ -27,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -35,11 +36,14 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import android.graphics.Bitmap
 import android.widget.Toast
 import com.mundymorning.touchmusicid.data.LibrarySong
+import com.mundymorning.touchmusicid.design.AlbumArtBackground
 import com.mundymorning.touchmusicid.design.AlbumArtBox
 import com.mundymorning.touchmusicid.design.AssetSlot
 import com.mundymorning.touchmusicid.design.CompactNotice
+import com.mundymorning.touchmusicid.design.DynamicArtworkTheme
 import com.mundymorning.touchmusicid.design.GlassCard
 import com.mundymorning.touchmusicid.design.Pill
 import com.mundymorning.touchmusicid.design.TmiButton
@@ -58,6 +62,8 @@ import com.mundymorning.touchmusicid.knowledge.Lookup
 import com.mundymorning.touchmusicid.knowledge.MatchStatus
 import com.mundymorning.touchmusicid.links.ExternalLinks
 import com.mundymorning.touchmusicid.links.Service
+import com.mundymorning.touchmusicid.net.ArtworkLoader
+import com.mundymorning.touchmusicid.net.ArtworkUrl
 import java.text.DateFormat
 import java.util.Date
 
@@ -69,49 +75,59 @@ fun ResultScreen(vm: MainViewModel, songKey: String, onBack: () -> Unit) {
     val ctx = LocalContext.current
     val current = ui?.takeIf { it.item.song.key == songKey }
 
-    Column(Modifier.fillMaxWidth()) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onBack, Modifier.size(TmiDims.MinTouch)) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = TmiColors.TextHigh) }
-            Text("Song", style = MaterialTheme.typography.titleLarge, color = TmiColors.TextHigh, modifier = Modifier.weight(1f).semantics { heading() })
-            if (current != null) {
-                val isFav = favorites.orEmpty().any { it.song.key == songKey }
-                IconButton({ vm.toggleFavorite(current.item, isFav) }, Modifier.size(TmiDims.MinTouch)) {
-                    Icon(
-                        if (isFav) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                        if (isFav) "Remove from favorites" else "Add to favorites",
-                        tint = if (isFav) TmiColors.Error else TmiColors.TextHigh,
-                    )
-                }
-                IconButton({
-                    if (!ExternalLinks.share(ctx, current.item.song)) Toast.makeText(ctx, "No app available to share with", Toast.LENGTH_SHORT).show()
-                }, Modifier.size(TmiDims.MinTouch)) { Icon(Icons.Filled.Share, "Share", tint = TmiColors.TextHigh) }
-            }
-        }
+    val artUrl = current?.item?.song?.artworkUrl?.let { ArtworkUrl.normalize(it) }
+    val artBitmap by produceState<Bitmap?>(artUrl?.let { ArtworkLoader.cached(it) }, artUrl) {
+        if (artUrl != null && value == null) value = ArtworkLoader.load(artUrl)
+    }
 
-        if (current == null) {
-            Box(Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = TmiColors.Primary) }
-            return@Column
-        }
+    DynamicArtworkTheme(artBitmap) {
+        Box(Modifier.fillMaxSize()) {
+            AlbumArtBackground(artBitmap)
+            Column(Modifier.fillMaxSize()) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onBack, Modifier.size(TmiDims.MinTouch)) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = TmiColors.TextHigh) }
+                    Text("Song", style = MaterialTheme.typography.titleLarge, color = TmiColors.TextHigh, modifier = Modifier.weight(1f).semantics { heading() })
+                    if (current != null) {
+                        val isFav = favorites.orEmpty().any { it.song.key == songKey }
+                        IconButton({ vm.toggleFavorite(current.item, isFav) }, Modifier.size(TmiDims.MinTouch)) {
+                            Icon(
+                                if (isFav) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                                if (isFav) "Remove from favorites" else "Add to favorites",
+                                tint = if (isFav) TmiColors.Error else TmiColors.TextHigh,
+                            )
+                        }
+                        IconButton({
+                            if (!ExternalLinks.share(ctx, current.item.song)) Toast.makeText(ctx, "No app available to share with", Toast.LENGTH_SHORT).show()
+                        }, Modifier.size(TmiDims.MinTouch)) { Icon(Icons.Filled.Share, "Share", tint = TmiColors.TextHigh) }
+                    }
+                }
 
-        val song = current.item.song
-        LazyColumn(
-            Modifier.fillMaxWidth(),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = TmiDims.ScreenPadding, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(TmiDims.Gap),
-        ) {
-            item { Header(current.item) }
-            item { LinkRow(current.item) }
-            when (val k = current.knowledge) {
-                KnowledgeUi.Loading -> item { LoadingCard() }
-                is KnowledgeUi.Error -> item { ErrorCard(k.kind, onRetry = vm::retryKnowledge) }
-                is KnowledgeUi.Ready -> {
-                    if (k.freshness == Freshness.CACHE_STALE_OFFLINE) item { OfflineBanner(k.bundle.fetchedAtMillis, vm::retryKnowledge) }
-                    item { LookupSection("About the artist", song.artist, k.bundle.artist, vm::chooseArtist, vm::retryKnowledge) }
-                    item { LookupSection("About the song", song.title, k.bundle.song, null, vm::retryKnowledge) }
-                    item { SourcesCard(k.bundle) }
+                if (current == null) {
+                    Box(Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = MaterialTheme.colorScheme.primary) }
+                    return@Column
+                }
+
+                val song = current.item.song
+                LazyColumn(
+                    Modifier.fillMaxWidth().weight(1f),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = TmiDims.ScreenPadding, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(TmiDims.Gap),
+                ) {
+                    item { Header(current.item) }
+                    item { LinkRow(current.item) }
+                    when (val k = current.knowledge) {
+                        KnowledgeUi.Loading -> item { LoadingCard() }
+                        is KnowledgeUi.Error -> item { ErrorCard(k.kind, onRetry = vm::retryKnowledge) }
+                        is KnowledgeUi.Ready -> {
+                            if (k.freshness == Freshness.CACHE_STALE_OFFLINE) item { OfflineBanner(k.bundle.fetchedAtMillis, vm::retryKnowledge) }
+                            item { LookupSection("About the artist", song.artist, k.bundle.artist, vm::chooseArtist, vm::retryKnowledge) }
+                            item { LookupSection("About the song", song.title, k.bundle.song, null, vm::retryKnowledge) }
+                            item { SourcesCard(k.bundle) }
+                        }
+                    }
+                    item { Spacer(Modifier.height(16.dp)) }
                 }
             }
-            item { Spacer(Modifier.height(16.dp)) }
         }
     }
 }
@@ -121,8 +137,8 @@ private fun Header(item: LibrarySong) {
     Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         AlbumArtBox(item.song)
         Spacer(Modifier.height(8.dp))
-        Text(item.song.title, style = MaterialTheme.typography.headlineMedium, color = TmiColors.TextHigh, textAlign = TextAlign.Center)
-        Text(item.song.artist, style = MaterialTheme.typography.titleMedium, color = TmiColors.Primary, textAlign = TextAlign.Center)
+        Text(item.song.title, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onBackground, textAlign = TextAlign.Center)
+        Text(item.song.artist, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary, textAlign = TextAlign.Center)
         item.song.album?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = TmiColors.TextMedium, textAlign = TextAlign.Center) }
         if (item.source == RecognitionSource.DEMO) {
             Pill("Demo result · not real recognition", TmiColors.Warm)
@@ -143,7 +159,6 @@ private fun LinkRow(item: LibrarySong) {
             Service.entries.forEach { svc ->
                 TmiButton(svc.label, {
                     if (svc == Service.SPOTIFY) {
-                        // Spotify often ignores the query, so make pasting it one gesture away.
                         ExternalLinks.copySearchText(ctx, item.song)?.let {
                             Toast.makeText(ctx, "Copied “$it”. If Spotify's search is empty, paste it.", Toast.LENGTH_LONG).show()
                         }
@@ -160,14 +175,14 @@ private fun LinkRow(item: LibrarySong) {
             "Links open a search for this song. Availability depends on each service.",
             style = MaterialTheme.typography.bodySmall, color = TmiColors.TextLow,
         )
-        DebugLabEntry() // debug builds only; emits nothing in release
+        DebugLabEntry()
     }
 }
 
 @Composable
 private fun LoadingCard() = GlassCard {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-        CircularProgressIndicator(Modifier.size(24.dp), color = TmiColors.Primary, strokeWidth = 2.5.dp)
+        CircularProgressIndicator(Modifier.size(24.dp), color = MaterialTheme.colorScheme.primary, strokeWidth = 2.5.dp)
         Text("Looking up verified facts on Wikipedia and Wikidata…", style = MaterialTheme.typography.bodyMedium, color = TmiColors.TextMedium)
     }
 }
@@ -261,11 +276,11 @@ private fun EntityCard(title: String, e: EntityKnowledge) {
     val ctx = LocalContext.current
     GlassCard {
         Text(title, style = MaterialTheme.typography.titleMedium, color = TmiColors.TextHigh, modifier = Modifier.semantics { heading() })
-        Text(e.name, style = MaterialTheme.typography.titleLarge, color = TmiColors.Primary)
+        Text(e.name, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
         e.description?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = TmiColors.TextMedium) }
         if (e.extract != null) {
             Text(e.extract, style = MaterialTheme.typography.bodyLarge, color = TmiColors.TextHigh)
-            Pill("From Wikipedia", TmiColors.Accent)
+            Pill("From Wikipedia", MaterialTheme.colorScheme.secondary)
         } else {
             Text("No Wikipedia article is linked to this record.", style = MaterialTheme.typography.bodyMedium, color = TmiColors.TextLow)
         }
@@ -286,7 +301,7 @@ private fun FactRow(f: Fact) {
         Text(f.label, style = MaterialTheme.typography.bodyMedium, color = TmiColors.TextLow, modifier = Modifier.weight(0.38f))
         Column(Modifier.weight(0.62f)) {
             Text(f.value, style = MaterialTheme.typography.bodyMedium, color = TmiColors.TextHigh)
-            Text(f.source.label, style = MaterialTheme.typography.labelSmall, color = TmiColors.Accent)
+            Text(f.source.label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
         }
     }
 }
