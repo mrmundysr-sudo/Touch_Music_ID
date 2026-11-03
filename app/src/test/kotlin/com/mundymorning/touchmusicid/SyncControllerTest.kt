@@ -10,12 +10,13 @@ class SyncControllerTest {
     private fun SyncController.pos(at: Double) = clock.positionMs(at)
 
     private fun SyncController.exitEarlyPhase() {
-        // Enough agreements to leave the earlyLockAgrees=3 window and leave the clock at a known place (~40_000 ms at 40_000 mono)
+        // Exact matches that exit the earlyLockAgrees=3 window and leave the clock at a known place (40_000 ms at 40_000 mono).
+        // Using zero-diff fixes avoids the half-correction accumulation that previously left a residual offset.
         onFix(fix(0.0, 0.0))
-        onFix(fix(10_050.0, 10_000.0))
-        onFix(fix(20_050.0, 20_000.0))
-        onFix(fix(30_050.0, 30_000.0))
-        onFix(fix(40_000.0, 40_000.0)) // exits early phase with AGREE
+        onFix(fix(10_000.0, 10_000.0))
+        onFix(fix(20_000.0, 20_000.0))
+        onFix(fix(30_000.0, 30_000.0))
+        onFix(fix(40_000.0, 40_000.0)) // exits early phase with AGREE; clock is exactly 40_000 at mono 40_000
     }
 
     @Test fun identifiedHalfwayThroughStartsAtTheMeasuredPositionNotAtZero() {
