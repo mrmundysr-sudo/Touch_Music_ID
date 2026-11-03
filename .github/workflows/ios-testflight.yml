@@ -1,3 +1,6 @@
+# Manually triggered TestFlight build for Touch Music ID.
+# Signing uses Admin APPLE_SIGNING_* secrets; upload uses App Manager credentials.
+# Always checks out grok/ios-testflight so iOS code stays on that branch.
 name: iOS TestFlight
 
 on:
