@@ -106,13 +106,13 @@ class LyricsLabControllerTest {
         val c = controller(net) { sid, emit ->
             emit(ProbeEvent.Started(sid, tl))
             emit(ProbeEvent.Fix(raw(sid, 45_000f, now())))
-            repeat(50) { delay(100); emit(ProbeEvent.Audio(sid, now(), 0.0, 0, 0)) }          // 5 s of silence (>4 s hold)
+            repeat(60) { delay(100); emit(ProbeEvent.Audio(sid, now(), 0.0, 0, 0)) }          // 6 s of silence (>4 s hold)
             repeat(5) { delay(100); emit(ProbeEvent.Audio(sid, now(), 0.05, 9_000, 0)) }
             emit(ProbeEvent.Fix(raw(sid, predicted = 100_000f, readMono = now())))
             awaitCancellation()
         }
         c.start(); runCurrent()
-        advanceTimeBy(5_050); runCurrent()
+        advanceTimeBy(6_050); runCurrent()
         assertEquals("quiet is a heuristic, but it parks the clock", SyncState.HOLD, c.tick.value.syncState)
         val frozen = c.tick.value.positionMs
         advanceTimeBy(100)
