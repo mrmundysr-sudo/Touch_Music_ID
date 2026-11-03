@@ -54,7 +54,7 @@ class LyricsLabControllerTest {
         val net = Net { ok(JSONArray(listOf(record())).toString()) }
         val c = controller(net) { sid, emit ->
             emit(ProbeEvent.Started(sid, tl))
-            emit(ProbeEvent.Fix(raw(sid, predicted = 45_000f, readMono = now())))   // the song is 45 s in
+            emit(ProbeEvent.Fix(raw(sid, predicted = 45_000f, readMono = now())))
             awaitCancellation()
         }
         c.start(); runCurrent(); advanceTimeBy(100)
@@ -62,9 +62,9 @@ class LyricsLabControllerTest {
         val ready = c.state.value.lyrics as LyricsState.Ready
         assertTrue("synchronized lyrics trusted", ready.synced)
         assertEquals(110_000L, c.state.value.song!!.durationMs)
-        assertEquals("not the start of the song", 4, c.tick.value.activeIdx)          // 45.1 s -> L4 (40 s)
+        assertEquals("not the start of the song", 4, c.tick.value.activeIdx)
         advanceTimeBy(5_000)
-        assertEquals(5, c.tick.value.activeIdx)                                        // 50.1 s -> L5
+        assertEquals(5, c.tick.value.activeIdx)
         assertEquals(SyncState.FOLLOWING, c.tick.value.syncState)
         val p = c.tick.value.positionMs
         assertTrue("position ~50.1 s but was $p", p in 50_000..50_300)
@@ -80,7 +80,7 @@ class LyricsLabControllerTest {
     }
 
     @Test fun timestampsThatRunPastTheTrackEndFallBackToPlain() = runTest {
-        val tooLong = "[00:05.00]a\n[05:00.00]b" // recording is 110 s
+        val tooLong = "[00:05.00]a\n[05:00.00]b"
         val net = Net { ok(JSONArray(listOf(record(syncedLyrics = tooLong, plain = "a\nb"))).toString()) }
         val c = controller(net) { sid, emit -> emit(ProbeEvent.Started(sid, tl)); emit(ProbeEvent.Fix(raw(sid, 45_000f, now()))); awaitCancellation() }
         c.start(); runCurrent(); advanceTimeBy(200)
@@ -106,13 +106,13 @@ class LyricsLabControllerTest {
         val c = controller(net) { sid, emit ->
             emit(ProbeEvent.Started(sid, tl))
             emit(ProbeEvent.Fix(raw(sid, 45_000f, now())))
-            repeat(20) { delay(100); emit(ProbeEvent.Audio(sid, now(), 0.0, 0, 0)) }          // 2 s of silence
-            repeat(5) { delay(100); emit(ProbeEvent.Audio(sid, now(), 0.05, 9_000, 0)) }       // sound is back
-            emit(ProbeEvent.Fix(raw(sid, predicted = 100_000f, readMono = now())))              // the user had sought ahead
+            repeat(50) { delay(100); emit(ProbeEvent.Audio(sid, now(), 0.0, 0, 0)) }          // 5 s of silence (>4 s hold)
+            repeat(5) { delay(100); emit(ProbeEvent.Audio(sid, now(), 0.05, 9_000, 0)) }
+            emit(ProbeEvent.Fix(raw(sid, predicted = 100_000f, readMono = now())))
             awaitCancellation()
         }
         c.start(); runCurrent()
-        advanceTimeBy(2_050); runCurrent()
+        advanceTimeBy(5_050); runCurrent()
         assertEquals("quiet is a heuristic, but it parks the clock", SyncState.HOLD, c.tick.value.syncState)
         val frozen = c.tick.value.positionMs
         advanceTimeBy(100)
@@ -130,7 +130,7 @@ class LyricsLabControllerTest {
         val net = Net { ok(JSONArray(listOf(record())).toString()) }
         val c = controller(net) { sid, emit ->
             emit(ProbeEvent.Started(sid, tl))
-            emit(ProbeEvent.Fix(raw(sid, predicted = 1.79e12f, readMono = now(), offset = 40_000f))) // stream-relative timestamps: garbage
+            emit(ProbeEvent.Fix(raw(sid, predicted = 1.79e12f, readMono = now(), offset = 40_000f)))
             awaitCancellation()
         }
         c.start(); runCurrent(); advanceTimeBy(500)
@@ -145,7 +145,7 @@ class LyricsLabControllerTest {
             emit(ProbeEvent.Started(sid, tl))
             emit(ProbeEvent.Fix(raw(sid, 45_000f, now())))
             delay(1_000); emit(ProbeEvent.Fix(raw(sid, 10_000f, now(), title = "Other Song")))
-            delay(1_000); emit(ProbeEvent.Fix(raw(sid, 46_000f, now())))                              // back to the first: one-off dismissed
+            delay(1_000); emit(ProbeEvent.Fix(raw(sid, 46_000f, now())))
             delay(1_000); emit(ProbeEvent.Fix(raw(sid, 12_000f, now(), title = "Other Song")))
             delay(1_000); emit(ProbeEvent.Fix(raw(sid, 13_000f, now(), title = "Other Song")))
             awaitCancellation()
@@ -160,7 +160,7 @@ class LyricsLabControllerTest {
         val net = Net { ok(JSONArray(listOf(record())).toString()) }
         val c = controller(net) { sid, emit -> emit(ProbeEvent.Started(sid, tl)); emit(ProbeEvent.Fix(raw(sid, 49_900f, now()))); awaitCancellation() }
         c.start(); runCurrent(); advanceTimeBy(100)
-        assertEquals(4, c.tick.value.activeIdx)          // 49.9 s still in L4
+        assertEquals(4, c.tick.value.activeIdx)
         c.nudge(250); advanceTimeBy(100)
         assertEquals("a +250 ms nudge pushes it into L5", 5, c.tick.value.activeIdx)
         assertEquals(250, c.state.value.nudgeMs)
