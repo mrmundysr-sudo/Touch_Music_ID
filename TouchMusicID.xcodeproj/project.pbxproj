@@ -10,18 +10,48 @@
 		A10000000000000000000001 /* TouchMusicIDApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000001 /* TouchMusicIDApp.swift */; };
 		A10000000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* ContentView.swift */; };
 		A10000000000000000000003 /* ShazamService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000003 /* ShazamService.swift */; };
-		A10000000000000000000004 /* WikiTabsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* WikiTabsView.swift */; };
 		A10000000000000000000005 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000006 /* Assets.xcassets */; };
+		A10000000000000000000010 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000010 /* Theme.swift */; };
+		A10000000000000000000011 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000011 /* AppModel.swift */; };
+		A10000000000000000000012 /* ListenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000012 /* ListenView.swift */; };
+		A10000000000000000000013 /* ResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000013 /* ResultView.swift */; };
+		A10000000000000000000014 /* LibraryViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000014 /* LibraryViews.swift */; };
+		A10000000000000000000015 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000015 /* SettingsView.swift */; };
+		A10000000000000000000016 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000016 /* Models.swift */; };
+		A10000000000000000000017 /* Http.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000017 /* Http.swift */; };
+		A10000000000000000000018 /* KnowledgeModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000018 /* KnowledgeModels.swift */; };
+		A10000000000000000000019 /* WikiParsers.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000019 /* WikiParsers.swift */; };
+		A1000000000000000000001A /* WikiApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001A /* WikiApi.swift */; };
+		A1000000000000000000001B /* KnowledgeResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001B /* KnowledgeResolver.swift */; };
+		A1000000000000000000001C /* KnowledgeRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001C /* KnowledgeRepository.swift */; };
+		A1000000000000000000001D /* Lyrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001D /* Lyrics.swift */; };
+		A1000000000000000000001E /* ExternalLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001E /* ExternalLinks.swift */; };
+		A1000000000000000000001F /* Library.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001F /* Library.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		A20000000000000000000001 /* TouchMusicIDApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchMusicIDApp.swift; sourceTree = "<group>"; };
 		A20000000000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A20000000000000000000003 /* ShazamService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShazamService.swift; sourceTree = "<group>"; };
-		A20000000000000000000004 /* WikiTabsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WikiTabsView.swift; sourceTree = "<group>"; };
 		A20000000000000000000005 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A20000000000000000000006 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A30000000000000000000001 /* TouchMusicID.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TouchMusicID.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A20000000000000000000010 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		A20000000000000000000011 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		A20000000000000000000012 /* ListenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListenView.swift; sourceTree = "<group>"; };
+		A20000000000000000000013 /* ResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultView.swift; sourceTree = "<group>"; };
+		A20000000000000000000014 /* LibraryViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryViews.swift; sourceTree = "<group>"; };
+		A20000000000000000000015 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		A20000000000000000000016 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		A20000000000000000000017 /* Http.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Http.swift; sourceTree = "<group>"; };
+		A20000000000000000000018 /* KnowledgeModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnowledgeModels.swift; sourceTree = "<group>"; };
+		A20000000000000000000019 /* WikiParsers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WikiParsers.swift; sourceTree = "<group>"; };
+		A2000000000000000000001A /* WikiApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WikiApi.swift; sourceTree = "<group>"; };
+		A2000000000000000000001B /* KnowledgeResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnowledgeResolver.swift; sourceTree = "<group>"; };
+		A2000000000000000000001C /* KnowledgeRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnowledgeRepository.swift; sourceTree = "<group>"; };
+		A2000000000000000000001D /* Lyrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lyrics.swift; sourceTree = "<group>"; };
+		A2000000000000000000001E /* ExternalLinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalLinks.swift; sourceTree = "<group>"; };
+		A2000000000000000000001F /* Library.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Library.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -60,11 +90,34 @@
 				A20000000000000000000001 /* TouchMusicIDApp.swift */,
 				A20000000000000000000002 /* ContentView.swift */,
 				A20000000000000000000003 /* ShazamService.swift */,
-				A20000000000000000000004 /* WikiTabsView.swift */,
+				A20000000000000000000010 /* Theme.swift */,
+				A20000000000000000000011 /* AppModel.swift */,
+				A20000000000000000000012 /* ListenView.swift */,
+				A20000000000000000000013 /* ResultView.swift */,
+				A20000000000000000000014 /* LibraryViews.swift */,
+				A20000000000000000000015 /* SettingsView.swift */,
+				A50000000000000000000010 /* Core */,
 				A20000000000000000000005 /* Info.plist */,
 				A20000000000000000000006 /* Assets.xcassets */,
 			);
 			path = TouchMusicID;
+			sourceTree = "<group>";
+		};
+		A50000000000000000000010 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000016 /* Models.swift */,
+				A20000000000000000000017 /* Http.swift */,
+				A20000000000000000000018 /* KnowledgeModels.swift */,
+				A20000000000000000000019 /* WikiParsers.swift */,
+				A2000000000000000000001A /* WikiApi.swift */,
+				A2000000000000000000001B /* KnowledgeResolver.swift */,
+				A2000000000000000000001C /* KnowledgeRepository.swift */,
+				A2000000000000000000001D /* Lyrics.swift */,
+				A2000000000000000000001E /* ExternalLinks.swift */,
+				A2000000000000000000001F /* Library.swift */,
+			);
+			path = Core;
 			sourceTree = "<group>";
 		};
 		A50000000000000000000003 /* Products */ = {
@@ -135,7 +188,22 @@
 				A10000000000000000000001 /* TouchMusicIDApp.swift in Sources */,
 				A10000000000000000000002 /* ContentView.swift in Sources */,
 				A10000000000000000000003 /* ShazamService.swift in Sources */,
-				A10000000000000000000004 /* WikiTabsView.swift in Sources */,
+				A10000000000000000000010 /* Theme.swift in Sources */,
+				A10000000000000000000011 /* AppModel.swift in Sources */,
+				A10000000000000000000012 /* ListenView.swift in Sources */,
+				A10000000000000000000013 /* ResultView.swift in Sources */,
+				A10000000000000000000014 /* LibraryViews.swift in Sources */,
+				A10000000000000000000015 /* SettingsView.swift in Sources */,
+				A10000000000000000000016 /* Models.swift in Sources */,
+				A10000000000000000000017 /* Http.swift in Sources */,
+				A10000000000000000000018 /* KnowledgeModels.swift in Sources */,
+				A10000000000000000000019 /* WikiParsers.swift in Sources */,
+				A1000000000000000000001A /* WikiApi.swift in Sources */,
+				A1000000000000000000001B /* KnowledgeResolver.swift in Sources */,
+				A1000000000000000000001C /* KnowledgeRepository.swift in Sources */,
+				A1000000000000000000001D /* Lyrics.swift in Sources */,
+				A1000000000000000000001E /* ExternalLinks.swift in Sources */,
+				A1000000000000000000001F /* Library.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
