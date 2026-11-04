@@ -24,7 +24,9 @@ plus the on-demand lyrics work from `grok/integrated-lyrics`.
 | Settings, privacy text, Setup guide | yes | yes |
 | Online lyrics (LRCLIB), default OFF, **debug builds only** (iOS also allows TestFlight) pending licensing review | yes | yes (allowed in debug **and TestFlight** builds; App Store builds keep it off) |
 | Local LRC import (session only) | button is a placeholder | working file picker |
-| Lyrics Lab (debug prototype for synced lyrics) | debug only | **not ported** |
+| **Follow along** (synchronized lyrics: timing engine, silence hold, re-sync, nudge, timing methods A/B/C) | Lyrics Lab, debug only | in the Lyrics tab (`FollowController`, `Core/LyricSync`); same gating as online lyrics |
+| LRCLIB candidate scoring (version/duration/artist checks), iTunes + MusicBrainz duration lookup | yes | yes (`Core/LyricsMatcher`, `Core/LyricsMetadata`) |
+| Lab diagnostics (CSV log, Mark, calibration protocol) | debug only | **not ported** (a one-line status/diagnostic is shown while following) |
 | Replaceable artwork slots (`slot_*.png`) | yes | **not ported** |
 
 ## Layout

@@ -172,7 +172,8 @@ final class RecognitionService: NSObject, ObservableObject, SHSessionDelegate {
             appleMusicURL: item.appleMusicURL?.absoluteString,
             webURL: item.webURL?.absoluteString,
             isrc: item.isrc,
-            artworkURL: item.artworkURL?.absoluteString
+            artworkURL: item.artworkURL?.absoluteString,
+            appleMusicId: item.appleMusicID
         )
         Task { @MainActor in
             guard self.isBusy else { return }

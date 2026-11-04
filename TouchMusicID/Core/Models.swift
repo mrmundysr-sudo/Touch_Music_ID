@@ -15,9 +15,11 @@ public struct Song: Codable, Equatable, Hashable {
     public var webURL: String?
     public var isrc: String?
     public var artworkURL: String?
+    /// Apple Music / iTunes track id of the exact release ShazamKit matched (used to look up duration and album).
+    public var appleMusicId: String?
 
     public init(title: String, artist: String, album: String? = nil, appleMusicURL: String? = nil,
-                webURL: String? = nil, isrc: String? = nil, artworkURL: String? = nil) {
+                webURL: String? = nil, isrc: String? = nil, artworkURL: String? = nil, appleMusicId: String? = nil) {
         self.title = title
         self.artist = artist
         self.album = album
@@ -25,6 +27,7 @@ public struct Song: Codable, Equatable, Hashable {
         self.webURL = webURL
         self.isrc = isrc
         self.artworkURL = artworkURL
+        self.appleMusicId = appleMusicId
     }
 
     /// Stable identity used for favorites and knowledge-cache lookups.

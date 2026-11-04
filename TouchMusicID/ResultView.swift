@@ -60,7 +60,7 @@ struct ResultView: View {
 
     @ViewBuilder
     private func content(_ r: ResultUi) -> some View {
-        ScrollView {
+        FollowScroller(follow: model.follow) {
             VStack(spacing: Tmi.gap) {
                 ResultHeader(item: r.item)
                 LinkRow(song: r.item.song)
@@ -73,7 +73,7 @@ struct ResultView: View {
                 switch tab {
                 case .artistWiki: artistTab(r)
                 case .songWiki: songTab(r)
-                case .lyrics: LyricsCard(state: r.lyrics)
+                case .lyrics: LyricsCard(state: r.lyrics, song: r.item.song)
                 }
             }
             .padding(.horizontal, Tmi.screenPadding)
@@ -339,6 +339,7 @@ private struct SourcesCard: View {
 
 private struct LyricsCard: View {
     let state: LyricsUiState
+    let song: Song
     @EnvironmentObject private var model: AppModel
     @State private var showImporter = false
     @State private var importError: String?
@@ -368,12 +369,7 @@ private struct LyricsCard: View {
                 TmiButton(title: "Try again", primary: false) { model.loadLyrics() }
                 importButton
             case .ready(let r):
-                if r.instrumental {
-                    Text("Instrumental — no lyrics").font(.subheadline).foregroundColor(Tmi.textMedium)
-                } else {
-                    Text(r.displayText).font(.body).foregroundColor(Tmi.textHigh)
-                    Pill(text: r.source == .local ? "Local LRC" : "From LRCLIB", color: Tmi.accent)
-                }
+                LyricsBody(result: r, song: song, follow: model.follow)
             }
             if let importError { Text(importError).font(.caption).foregroundColor(Tmi.warm) }
         }

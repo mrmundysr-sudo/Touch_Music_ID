@@ -24,6 +24,8 @@ final class AppModel: ObservableObject {
 
     // Services
     let recognizer = RecognitionService()
+    /// Follow along (synchronized lyrics). Owns its own microphone session; never runs together with Listen.
+    let follow = FollowController()
     private let library: LibraryStore
     private let knowledge: KnowledgeRepository
     private let lyricsRepo: LyricsRepository
@@ -69,7 +71,12 @@ final class AppModel: ObservableObject {
 
         let allowOnline = Self.onlineLyricsAllowed()
         let defaultsRef = defaults
-        lyricsRepo = LyricsRepository(local: LocalLrcStore(), http: http, onlineAllowedInThisBuild: allowOnline,
+        // Each free service gets its own spacing: requests are sequential and polite.
+        lyricsRepo = LyricsRepository(local: LocalLrcStore(),
+                                      http: SpacedFetcher(http, minInterval: 0.6),
+                                      itunesHTTP: SpacedFetcher(http, minInterval: 3.2),
+                                      musicBrainzHTTP: SpacedFetcher(http, minInterval: 1.1),
+                                      onlineAllowedInThisBuild: allowOnline,
                                       onlineEnabled: { defaultsRef.bool(forKey: Keys.onlineLyrics) })
 
         recognizer.onMatch = { [weak self] song, source in self?.matched(song, source) }
@@ -89,7 +96,7 @@ final class AppModel: ObservableObject {
 
     // MARK: Listening
 
-    func onListenTapped() { recognizer.tapped(demo: demoMode) }
+    func onListenTapped() { follow.stop(); recognizer.tapped(demo: demoMode) }
     func cancelListening() { recognizer.cancel() }
     func dismissListenMessage() { recognizer.reset() }
 
@@ -114,6 +121,7 @@ final class AppModel: ObservableObject {
     }
 
     func closeResult() {
+        follow.stop()
         knowledgeTask?.cancel(); lyricsTask?.cancel(); artworkTask?.cancel()
         result = nil
         artwork = nil
@@ -171,9 +179,16 @@ final class AppModel: ObservableObject {
         lyricsTask = Task { [weak self] in
             guard let self else { return }
             let s = current.item.song
-            let state = await self.lyricsRepo.load(songKey: s.key, query: TrackQuery(title: s.title, artist: s.artist, album: s.album))
+            let state = await self.lyricsRepo.load(songKey: s.key, query: TrackQuery(title: s.title, artist: s.artist, album: s.album, appleMusicId: s.appleMusicId, isrc: s.isrc))
             if self.result?.item.song.key == s.key { self.result?.lyrics = state }
         }
+    }
+
+    /// Starts Follow along for the open song, using its synchronized lyrics.
+    func startFollow() {
+        guard let r = result, case .ready(let lyrics) = r.lyrics, lyrics.canFollow else { return }
+        recognizer.cancel()
+        follow.start(song: r.item.song, lines: lyrics.syncedLines)
     }
 
     func importLocalLrc(_ text: String) {

@@ -248,14 +248,18 @@ final class LyricsTests: XCTestCase {
     }
 
     func testPrimaryArtistCutsFeaturing() {
-        XCTAssertEqual(LrclibClient.primaryArtist("Drake feat. Rihanna"), "Drake")
-        XCTAssertEqual(LrclibClient.primaryArtist("Simon, Garfunkel"), "Simon")
-        XCTAssertEqual(LrclibClient.primaryArtist("Queen"), "Queen")
+        XCTAssertEqual(LyricsMatcher.primaryArtist("Drake feat. Rihanna"), "Drake")
+        XCTAssertEqual(LyricsMatcher.primaryArtist("Simon, Garfunkel"), "Simon")
+        XCTAssertEqual(LyricsMatcher.primaryArtist("Queen"), "Queen")
     }
 
-    func testLrclibParsesInstrumentalAndRejectsEmpty() {
-        XCTAssertEqual(LrclibClient.parseObject(["instrumental": true])?.instrumental, true)
-        XCTAssertNil(LrclibClient.parseObject(["plainLyrics": "", "syncedLyrics": ""]))
+    func testLrclibRecordParsing() {
+        XCTAssertEqual(LrclibClient.parseRecord(["id": 1, "instrumental": true])?.instrumental, true)
+        XCTAssertNil(LrclibClient.parseRecord(["trackName": "no id"]))
+        let r = LrclibClient.parseRecord(["id": 2, "plainLyrics": "", "syncedLyrics": " ", "duration": 200.5])
+        XCTAssertNil(r?.plain)
+        XCTAssertNil(r?.synced)
+        XCTAssertEqual(r?.durationSec, 200.5)
     }
 
     func testOnlineIsNeverCalledWhenNotAllowedInThisBuild() async {
@@ -286,10 +290,10 @@ final class LyricsTests: XCTestCase {
     }
 
     func testOnlineLookupWhenAllowed() async {
-        let body = #"[{"plainLyrics":"la la","syncedLyrics":"[00:01.00]la la"}]"#
+        let body = #"[{"id":1,"trackName":"Song","artistName":"Band","duration":200,"plainLyrics":"la la","syncedLyrics":"[00:01.00]la la"}]"#
         let http = FakeHTTP { _ in json(body) }
         let repo = LyricsRepository(local: LocalLrcStore(), http: http, onlineAllowedInThisBuild: true, onlineEnabled: { true })
-        let state = await repo.load(songKey: "k", query: TrackQuery(title: "t", artist: "a"))
+        let state = await repo.load(songKey: "k", query: TrackQuery(title: "Song", artist: "Band"))
         guard case .ready(let r) = state else { return XCTFail("expected ready, got \(state)") }
         XCTAssertEqual(r.source, .online)
         XCTAssertEqual(r.syncedLines.count, 1)

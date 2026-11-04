@@ -27,6 +27,12 @@
 		A1000000000000000000001D /* Lyrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001D /* Lyrics.swift */; };
 		A1000000000000000000001E /* ExternalLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001E /* ExternalLinks.swift */; };
 		A1000000000000000000001F /* Library.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001F /* Library.swift */; };
+		A10000000000000000000030 /* FollowProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000030 /* FollowProbe.swift */; };
+		A10000000000000000000031 /* FollowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000031 /* FollowController.swift */; };
+		A10000000000000000000032 /* FollowAlongView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000032 /* FollowAlongView.swift */; };
+		A10000000000000000000033 /* LyricsMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000033 /* LyricsMatcher.swift */; };
+		A10000000000000000000034 /* LyricsMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000034 /* LyricsMetadata.swift */; };
+		A10000000000000000000035 /* LyricSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000035 /* LyricSync.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -52,6 +58,12 @@
 		A2000000000000000000001D /* Lyrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lyrics.swift; sourceTree = "<group>"; };
 		A2000000000000000000001E /* ExternalLinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalLinks.swift; sourceTree = "<group>"; };
 		A2000000000000000000001F /* Library.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Library.swift; sourceTree = "<group>"; };
+		A20000000000000000000030 /* FollowProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowProbe.swift; sourceTree = "<group>"; };
+		A20000000000000000000031 /* FollowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowController.swift; sourceTree = "<group>"; };
+		A20000000000000000000032 /* FollowAlongView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowAlongView.swift; sourceTree = "<group>"; };
+		A20000000000000000000033 /* LyricsMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricsMatcher.swift; sourceTree = "<group>"; };
+		A20000000000000000000034 /* LyricsMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricsMetadata.swift; sourceTree = "<group>"; };
+		A20000000000000000000035 /* LyricSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricSync.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -96,6 +108,9 @@
 				A20000000000000000000013 /* ResultView.swift */,
 				A20000000000000000000014 /* LibraryViews.swift */,
 				A20000000000000000000015 /* SettingsView.swift */,
+				A20000000000000000000030 /* FollowProbe.swift */,
+				A20000000000000000000031 /* FollowController.swift */,
+				A20000000000000000000032 /* FollowAlongView.swift */,
 				A50000000000000000000010 /* Core */,
 				A20000000000000000000005 /* Info.plist */,
 				A20000000000000000000006 /* Assets.xcassets */,
@@ -116,6 +131,9 @@
 				A2000000000000000000001D /* Lyrics.swift */,
 				A2000000000000000000001E /* ExternalLinks.swift */,
 				A2000000000000000000001F /* Library.swift */,
+				A20000000000000000000033 /* LyricsMatcher.swift */,
+				A20000000000000000000034 /* LyricsMetadata.swift */,
+				A20000000000000000000035 /* LyricSync.swift */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -188,6 +206,12 @@
 				A10000000000000000000001 /* TouchMusicIDApp.swift in Sources */,
 				A10000000000000000000002 /* ContentView.swift in Sources */,
 				A10000000000000000000003 /* ShazamService.swift in Sources */,
+				A10000000000000000000030 /* FollowProbe.swift in Sources */,
+				A10000000000000000000031 /* FollowController.swift in Sources */,
+				A10000000000000000000032 /* FollowAlongView.swift in Sources */,
+				A10000000000000000000033 /* LyricsMatcher.swift in Sources */,
+				A10000000000000000000034 /* LyricsMetadata.swift in Sources */,
+				A10000000000000000000035 /* LyricSync.swift in Sources */,
 				A10000000000000000000010 /* Theme.swift in Sources */,
 				A10000000000000000000011 /* AppModel.swift in Sources */,
 				A10000000000000000000012 /* ListenView.swift in Sources */,

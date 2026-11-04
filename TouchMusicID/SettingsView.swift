@@ -59,7 +59,8 @@ struct SettingsView: View {
                          "• Raw audio is never saved or uploaded by this app.\n" +
                          "• History and favorites live only on this phone. No account, no analytics, no ads.\n" +
                          "• Looking up a song sends only its title and artist names to Wikipedia and Wikidata.\n" +
-                         "• Online lyrics (when enabled) send only title and artist to LRCLIB. No permanent lyrics library is stored.")
+                         "• Online lyrics (when enabled) send the title and artist to LRCLIB, and the song's Apple Music ID or ISRC to Apple's iTunes lookup and MusicBrainz to find its length and album. No permanent lyrics library is stored.\n" +
+                         "• Follow along listens through the microphone only while it is on. The sound is matched by Apple's ShazamKit to find the position in the song, and is never saved.")
                         .font(.subheadline).foregroundColor(Tmi.textMedium)
                 }
 
@@ -110,6 +111,7 @@ struct HelpView: View {
             VStack(spacing: Tmi.gap) {
                 HelpCard(title: "What works today",
                          body: "• Song recognition with Apple's ShazamKit (microphone)\n" +
+                               "• Follow along: synchronized lyrics highlight in time with the music (needs timed lyrics)\n" +
                                "• Artist Wiki and Song Wiki from Wikipedia and Wikidata, with sources, caching and offline fallback\n" +
                                "• Lyrics tab: import a local LRC file; online lyrics (LRCLIB) in TestFlight builds, switched on in Settings\n" +
                                "• History and favorites saved on this phone\n" +

@@ -3,6 +3,7 @@ import SwiftUI
 /// Root: four tabs (Listen, History, Favorites, Settings). Matches the Android navigation.
 struct ContentView: View {
     @EnvironmentObject private var model: AppModel
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         TabView {
@@ -30,6 +31,10 @@ struct ContentView: View {
                     .navigationDestination(for: HelpRoute.self) { _ in HelpView() }
             }
             .tabItem { Label("Settings", systemImage: "gearshape.fill") }
+        }
+        .onChange(of: scenePhase) { phase in
+            // The microphone isn't available in the background; stop cleanly instead of silently stalling.
+            if phase == .background { model.follow.stop() }
         }
         .tint(model.accents.primary)
         .preferredColorScheme(.dark)

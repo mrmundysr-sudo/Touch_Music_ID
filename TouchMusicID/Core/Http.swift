@@ -20,7 +20,7 @@ public protocol HTTPFetcher {
 /// Polite fetcher: identifies the app, short timeout, no cookies, no credentials.
 public struct URLSessionFetcher: HTTPFetcher {
     private let session: URLSession
-    public static let userAgent = "TouchMusicID/0.1 (Mundy Morning Studios; iOS) contact via app store listing"
+    public static let userAgent = LabHttp.userAgent
 
     public init(timeout: TimeInterval = 12) {
         let cfg = URLSessionConfiguration.ephemeral
