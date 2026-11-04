@@ -1,23 +1,41 @@
 name: Portfolio iOS TestFlight Launcher
 
 on:
+  workflow_call:
+    inputs:
+      source_repository:
+        required: true
+        type: string
+      source_ref:
+        required: true
+        type: string
+      bundle_id:
+        required: true
+        type: string
+      app_name:
+        required: true
+        type: string
   workflow_dispatch:
     inputs:
       source_repository:
         description: "Repository owner/name"
-        required: true
+        required: false
+        default: "mrmundysr-sudo/Touch_7_Come_11"
         type: string
       source_ref:
         description: "Branch or commit"
-        required: true
+        required: false
+        default: "claude_ios_seven_come_eleven"
         type: string
       bundle_id:
         description: "iOS bundle identifier"
-        required: true
+        required: false
+        default: "com.touch7come11.game"
         type: string
       app_name:
         description: "App name"
-        required: true
+        required: false
+        default: "7 Come 11"
         type: string
 permissions:
   contents: read
