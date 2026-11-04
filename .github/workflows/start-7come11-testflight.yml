@@ -1,0 +1,19 @@
+name: Start 7 Come 11 TestFlight build
+
+on:
+  push:
+    branches:
+      - claude/bold-pascal-nrecdm
+    paths:
+      - "dispatch/7come11-testflight"
+permissions:
+  contents: read
+jobs:
+  build-and-upload:
+    uses: ./.github/workflows/portfolio-ios-testflight.yml
+    with:
+      source_repository: mrmundysr-sudo/Touch_7_Come_11
+      source_ref: claude_ios_seven_come_eleven
+      bundle_id: com.touch7come11.game
+      app_name: 7 Come 11
+    secrets: inherit
