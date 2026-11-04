@@ -240,6 +240,9 @@ struct TmiScreen: ViewModifier {
             .background(AlbumArtBackground(image: model.artwork))
             .toolbarBackground(Tmi.backgroundDeep.opacity(0.92), for: .tabBar)
             .toolbarBackground(.visible, for: .tabBar)
+            // Opaque-ish bar so scrolling content doesn't show through behind the title.
+            .toolbarBackground(Tmi.backgroundDeep.opacity(0.92), for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar, .tabBar)
     }
 }

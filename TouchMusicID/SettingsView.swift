@@ -85,6 +85,7 @@ struct SettingsView: View {
             .padding(.vertical, 12)
         }
         .navigationTitle("Settings")
+        .navigationBarTitleDisplayMode(.inline)
         .tmiScreen()
     }
 }

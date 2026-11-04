@@ -13,6 +13,7 @@ struct HistoryView: View {
             onDelete: { item in if let id = item.historyId { model.deleteHistory(id) } }
         )
         .navigationTitle("History")
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 if !model.history.isEmpty { Button("Clear all") { confirmClear = true } }
@@ -40,6 +41,7 @@ struct FavoritesView: View {
             onDelete: { item in model.toggleFavorite(item) }
         )
         .navigationTitle("Favorites")
+        .navigationBarTitleDisplayMode(.inline)
         .tmiScreen()
     }
 }
