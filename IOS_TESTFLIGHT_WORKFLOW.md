@@ -1,66 +1,92 @@
 # iOS TestFlight Workflow
 
-This document is the permanent operating guide for building, uploading, and installing Mundy Morning Studios iOS apps through GitHub Actions and TestFlight.
+This is the operating guide for building and installing Mundy Morning Studios iOS apps through the established GitHub Actions launcher and TestFlight.
 
-## Goal
+## Goal and completion standard
 
-The normal workflow is:
+For each app:
 
-1. Developer/AI pushes the app code and workflow changes to GitHub.
-2. GitHub Actions runs on a macOS runner.
-3. The workflow generates the iOS project, tests it, archives it, exports an IPA, and uploads it to App Store Connect.
-4. App Store Connect processes the build.
-5. The owner is added as an Internal Tester.
-6. TestFlight installs the processed build on the iPhone.
+1. Confirm its App Store Connect record exists under the Apple Developer account used by the existing GitHub secrets.
+2. Dispatch the established workflow with the app's repository, branch, bundle ID, and app-record name.
+3. Monitor the complete macOS build, tests, archive, IPA export, upload, and Apple processing.
+4. Configure internal TestFlight access for the signed-in owner account and attach the processed build to that internal group.
+5. Verify the build appears in the owner's TestFlight app on iPhone before reporting that it is ready.
 
-The app is not submitted for App Store review by this workflow.
+A successful GitHub run or Apple's `VALID` processing result confirms upload/processing, but does not by itself prove the owner can install the app. This launcher uploads and waits; it does not currently create TestFlight groups or add testers.
 
-## Source of truth
+This is an internal TestFlight path. Do not submit the build for App Review or Beta App Review, and do not press “Add for Review.” Do not add external testers unless specifically requested.
 
-- GitHub is the source of truth.
-- Confirm the repository, branch, commit, and workflow run before reporting success.
-- Do not build from an unknown branch.
-- Do not change application code while repairing CI unless the task requires it.
-- Do not expose or commit credentials.
+## Established launcher
 
-## Required GitHub repository secrets
+- Repository: `mrmundysr-sudo/Touch_Music_ID`
+- Workflow: `.github/workflows/portfolio-ios-testflight.yml`
+- Run it with the GitHub Actions **Run workflow** button and all four inputs:
+  - `source_repository`
+  - `source_ref`
+  - `bundle_id`
+  - `app_name`
+- Use the exact source repository and branch supplied for the app. Verify those values in the run log before reporting.
+- Existing Apple signing and App Store Connect credentials are stored in GitHub Actions secrets. Use them as configured. Never ask the owner to recreate them unless a run log proves that a specific required secret is missing.
+- The archive sets `CURRENT_PROJECT_VERSION=${{ github.run_number }}`; therefore the TestFlight build number is the GitHub Actions run number. The marketing version is separate.
+- Do not create a new Apple signing workflow or change signing credentials for a normal app launch.
 
-The workflow expects these exact repository secret names:
+## App Store Connect app record
 
-### Apple signing
+Create the app record once in App Store Connect before the first upload for that app. Apple's App Store Connect API does not create the initial app record.
 
-- `APPLE_SIGNING_PRIVATE_KEY` — contents of the Apple signing `.p8` key
-- `APPLE_SIGNING_KEY_ID` — Apple signing key ID
-- `APPLE_SIGNING_ISSUER_ID` — Apple signing issuer ID
+Before dispatch, confirm:
 
-### App Store Connect upload
+- App name (record name)
+- Platform: iOS
+- Bundle ID: exact match for the iOS project and workflow input
+- SKU: unique and final; Apple does not let you change it after record creation
+- User Access: the intended setting, such as Full Access
 
-- `APP_STORE_CONNECT_API_PRIVATE_KEY` — contents of the App Store Connect `.p8` key
-- `APP_STORE_CONNECT_API_KEY_ID` — App Store Connect API key ID
-- `APP_STORE_CONNECT_ISSUER_ID` — App Store Connect issuer ID
+The record must be in the same Apple Developer account as the existing upload key. A name can be unavailable even when the bundle ID is valid. If Apple rejects the desired name as already in use, use an available record name (for example, “Touch One Beta”), keep the exact bundle ID, and clearly report the difference between the App Store Connect record name and the app's displayed name. Never change a bundle ID to work around a name conflict.
 
-Never put the values in this document. Secret names must match the workflow exactly.
+“Full Access” on the app record controls which App Store Connect users can access the app record; it does not by itself add a user to a TestFlight tester group.
 
-## App Store Connect setup required once per app
+## TestFlight test information
 
-Before the first upload for a new app:
+For apps using the metadata helper, include `.apple-actions/test-information.json` in the app's source repository. The helper needs the bundle ID, locale, description, and feedback email. Example:
 
-1. Create the app record in App Store Connect.
-2. Use the exact bundle ID from the workflow.
-3. Confirm the app record is under the same Apple Developer account used by the API key.
-4. Confirm the app's marketing version matches the archive.
-5. Add the owner as an Internal Tester.
+```json
+{
+  "bundleId": "com.example.app",
+  "locale": "en-US",
+  "description": "Short beta description",
+  "feedbackEmail": "owner@example.com"
+}
+```
 
-The App Store Connect API key can upload a build, but it cannot create the initial app record.
+Use the owner's supplied feedback email. Do not assume the feedback email is also the Apple Account email or use it to invite a tester without verifying the signed-in account.
+
+A previous Touch One attempt failed at “Populate TestFlight Test Information” because the feedback email was missing. Another attempt then failed because App Store Connect had no record for the requested bundle ID. Both were fixed without changing or recreating any Apple secrets.
+
+## Internal tester setup after processing
+
+After Apple processing completes:
+
+1. Open the exact app record's **TestFlight** page.
+2. Confirm the processed build and build number.
+3. Check for an existing internal group. If none is set up for the owner, create a clearly named group such as `Touch One Internal Testers`.
+4. Add the owner's currently signed-in, eligible App Store Connect account as an internal tester. Do not assume the feedback email identifies that account.
+5. Attach the processed build to the internal group.
+6. Confirm the group lists the build and the owner account.
+7. Open TestFlight on the iPhone and verify the app is listed for that same Apple Account. If Apple presents an invite or acceptance step, complete it through the normal TestFlight flow.
+
+Use only internal testing for this workflow. Do not create an external testing group or submit for beta review. If the signed-in account is not eligible as an internal tester, report the exact App Store Connect blocker rather than silently inviting another person or switching to external testing.
+
+The remote App Store Connect browser session is separate from Safari on the owner's phone. If the remote session needs authentication, use the secure browser sign-in handoff; never ask for the Apple password in chat. Keep the session scoped to App Store Connect and do not place credentials in GitHub files, logs, ChatGPT handoffs, or app code.
 
 ## Build rules
 
-- Bundle ID must remain stable for an existing app.
-- Every upload must use a unique build number.
-- Use `CURRENT_PROJECT_VERSION=${{ github.run_number }}` during archive/export.
+- Keep the bundle ID stable for an existing app.
+- Use a unique build number on every upload.
 - Keep the marketing version separate from the build number.
-- The deployment target should be iOS 15.0 or newer.
-- The app icon must be a valid opaque 1024x1024 RGB PNG with no alpha channel.
+- Use iOS 15.0 or newer as the deployment target for this launcher.
+- The app icon must be an opaque RGB PNG at 1024×1024 with no alpha channel.
+- Preserve any app-specific native patches needed by the source app.
 
 ## Encryption compliance
 
@@ -71,113 +97,105 @@ The generated app's `Info.plist` must contain:
 <false/>
 ```
 
-Inject or verify this before archive.
-
-Do not force an already-set encryption value again during upload. App Store Connect can return HTTP 409:
+Inject or verify this before archive. Do not force an already-set encryption value again during upload. App Store Connect can return HTTP 409:
 
 ```
 You cannot update when the value is already set.
 ```
 
-If the plist already contains the compliance value, omit the upload action's `uses-non-exempt-encryption` override.
+If the plist already contains the compliance value, omit the upload action's duplicate encryption override.
 
-## Required workflow stages
+## Required run verification
 
-A healthy run should include:
+A healthy run includes:
 
-1. Checkout the intended branch.
-2. Install dependencies.
-3. Run project tests.
-4. Generate the iOS project.
-5. Apply native iOS patches.
-6. Verify the icon and Info.plist.
-7. Build/install/launch in the iOS Simulator when available.
-8. Archive the app.
-9. Export the signed IPA.
-10. Upload the IPA with App Store Connect API credentials.
-11. Wait for Apple processing.
-12. Report the workflow URL, commit, build number, and processing result.
+1. Correct source repository, branch, and source commit checked out.
+2. Dependencies installed and project tests passed.
+3. iOS project generated and native patches applied.
+4. Archive succeeded.
+5. IPA export succeeded.
+6. TestFlight test information populated for the correct bundle ID and app record.
+7. Upload succeeded.
+8. Apple processing completed successfully.
+9. Correct processed build visible in App Store Connect.
+10. Owner added to an internal group that has this build.
+11. App visible in the owner's TestFlight app on iPhone.
+
+Report the workflow URL, run number/build number, marketing version, source commit, app-record name, bundle ID, processing state, tester/group state, and iPhone TestFlight availability. Never say “ready to test” until steps 9–11 are verified.
 
 ## Common failures
 
 ### Empty signing values
 
-Error:
+Example error:
 
 ```
 -authenticationKeyID is required
 ```
 
-Cause: one or more `APPLE_SIGNING_*` secrets are missing or named incorrectly.
+First inspect the exact failing step and confirm which named secret is empty. Do not ask the owner to recreate any keys or secrets based on guesswork; the existing launcher has already succeeded with the configured credentials.
 
-Fix: restore the exact six secret names above at repository level.
+### No App Store Connect app record
 
-### No App Store Connect app
-
-Error:
+Example error:
 
 ```
 Unable to find App Store Connect app for bundle id ...
 ```
 
-Fix: create the app record in App Store Connect first. Do not change the bundle ID just to bypass this.
+Create or verify the app record under the correct Apple Developer account, with the exact bundle ID. Do not change the bundle ID to bypass this error.
 
 ### Bundle identifier collision
 
-Error:
+Example error:
 
 ```
 ITMS-90685: CFBundleIdentifier Collision
 ```
 
-Fix: inspect the generated project and remove duplicate embedded targets or duplicate bundle identifiers. Do not create a second App Store Connect app with the same bundle ID.
+Inspect the generated project and remove duplicate embedded targets or duplicate bundle identifiers. Do not create a second App Store Connect record with the same bundle ID.
 
 ### Encryption compliance 409
 
-Error:
+Example error:
 
 ```
 Failed to update encryption compliance for build.
 You cannot update when the value is already set.
 ```
 
-Fix: keep the plist value and remove the upload action's duplicate compliance override.
+Keep the plist value and remove the duplicate upload override.
 
-### Build not visible in TestFlight
+### Build processed but missing from the owner's TestFlight app
 
-Wait for Apple processing. Then verify the build under the app's TestFlight page. A successful GitHub upload does not necessarily mean the build is immediately installable.
+Do not rebuild or recreate secrets first. Confirm the exact app record and bundle ID, the processed build number, the signed-in App Store Connect account, its internal tester eligibility, group membership, and that the build is attached to the internal group. Also verify TestFlight on iPhone is using the same Apple Account. Complete any displayed invitation acceptance, then verify the app appears before reporting availability.
 
-### TestFlight says “Ready To Test”
+## Proven runs
 
-This means the phone's TestFlight account has not accepted an invitation yet. Add the Apple ID email as an Internal Tester, then accept the invitation from the email or TestFlight redeem flow.
+### 7 Come 11
 
-## Final verification checklist
-
-Do not call the release complete until all applicable checks pass:
-
-- [ ] Correct repository and branch confirmed
-- [ ] Correct commit confirmed
-- [ ] GitHub Actions run succeeded
-- [ ] Simulator/build checks passed
-- [ ] Archive succeeded
-- [ ] IPA export succeeded
-- [ ] Upload succeeded
-- [ ] Apple processing completed
-- [ ] Correct build number visible in App Store Connect
-- [ ] Owner is an Internal Tester
-- [ ] Owner can see the app in TestFlight
-- [ ] App installs and launches on the iPhone
-- [ ] No secrets or private key values were exposed
-
-## Current proven reference
-
-The first successful 7 Come 11 release proved this complete path:
-
-- Repository: `mrmundysr-sudo/Touch_7_Come_11`
+- Source repository: `mrmundysr-sudo/Touch_7_Come_11`
+- Source branch: `claude_ios_seven_come_eleven`
 - Bundle ID: `com.touch7come11.game`
-- App Store Connect app: `7 Come 11`
-- App ID: `6830392637`
-- TestFlight: internal testing
-- Result: build installed and launched successfully on iPhone
+- App Store Connect record: `7 Come 11`
+- SKU: `touch7come11ios`
+- Internal TestFlight path; do not use “Add for Review.”
 
-Use this document as the starting point for every future iOS app until the workflow is converted into a reusable organization/template workflow.
+### Touch One
+
+- Source repository: `mrmundysr-sudo/Touch-One`
+- Source branch: `claude/ios`
+- Source commit: `f8191a36c0ce5a7456ab27c04c23ec3b7c56f081`
+- Bundle ID: `com.touchone.game`
+- App Store Connect record: `Touch One Beta` (the name “Touch One” was already in use)
+- SKU: `touchoneios`
+- App Store Connect ID: `6830716342`
+- Feedback email in source metadata: `mmundy78@yahoo.com`
+- Launcher run: [41850903285](https://github.com/mrmundysr-sudo/Touch_Music_ID/actions/runs/41850903285)
+- Version/build: `1.0 (6)`
+- Apple processing: `VALID`; status: `Ready to Test`
+- Internal group created: `Touch One Internal Testers`
+- The signed-in Matthew Mundy App Store Connect account was the sole internal tester, and build `1.0 (6)` was attached to the group.
+- The app was confirmed available to that account in TestFlight without beta review, external testers, a rebuild, or credential changes.
+
+Use this document as the starting point for every future iOS app.
