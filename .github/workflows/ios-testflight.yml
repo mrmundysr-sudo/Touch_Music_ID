@@ -1,10 +1,16 @@
 # Manually triggered TestFlight build for Touch Music ID.
 # Signing uses Admin APPLE_SIGNING_* secrets; upload uses App Manager credentials.
-# Always checks out grok/ios-testflight so iOS code stays on that branch.
+# The source_ref input selects the app branch to build.
 name: iOS TestFlight
 
 on:
   workflow_dispatch:
+    inputs:
+      source_ref:
+        description: "Branch containing the iOS app to build"
+        required: true
+        default: "grok/ios-testflight"
+        type: string
 
 permissions:
   contents: read
@@ -16,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: grok/ios-testflight
+          ref: ${{ inputs.source_ref }}
 
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode.app
