@@ -136,7 +136,6 @@ jobs:
           issuer-id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           api-key-id: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           api-private-key: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
-          uses-non-exempt-encryption: "false"
           wait-for-processing: "true"
       - name: Report
         run: echo "Processed ${{ inputs.app_name }} build ${{ github.run_number }}"
