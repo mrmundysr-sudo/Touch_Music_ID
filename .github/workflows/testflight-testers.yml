@@ -1,0 +1,53 @@
+# TestFlight tester management. NOT a signing or upload workflow: it never builds, signs,
+# uploads, or submits anything for App Store review. The portfolio launcher
+# (portfolio-ios-testflight.yml) remains the only thing that builds and uploads.
+#
+# This repository is public. The request and the answer are encrypted, so run pages, logs,
+# summaries and artifacts show only ciphertext. Tester email addresses never appear in clear.
+name: TestFlight Tester Management (no signing)
+run-name: "Tester management ${{ inputs.request_id }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      request_id:
+        description: "Random request id (not secret)"
+        required: true
+        type: string
+      key_id:
+        description: "Fingerprint of the phone's public key (not secret)"
+        required: true
+        type: string
+      envelope:
+        description: "Encrypted request (ciphertext only)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: testflight-tester-management
+  cancel-in-progress: false
+
+jobs:
+  manage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out scripts
+        uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install cryptography
+        run: python -m pip install --quiet "cryptography>=42,<60"
+      - name: Handle encrypted request
+        env:
+          ENVELOPE: ${{ inputs.envelope }}
+          KEY_ID: ${{ inputs.key_id }}
+          TESTFLIGHT_PAYLOAD_PRIVATE_KEY: ${{ secrets.TESTFLIGHT_PAYLOAD_PRIVATE_KEY }}
+          APP_STORE_CONNECT_API_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: python .github/scripts/testflight_tester_admin.py
