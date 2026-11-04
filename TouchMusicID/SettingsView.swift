@@ -42,14 +42,14 @@ struct SettingsView: View {
                     )) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Enable Online Lyrics").font(.headline).foregroundColor(Tmi.textHigh)
-                            Text("Fetch synced lyrics on demand from LRCLIB when a song is identified. Off by default. Disabled in public release builds pending licensing review. Local LRC files work independently.")
+                            Text("Fetch synced lyrics on demand from LRCLIB when a song is identified. Off by default. Available in debug and TestFlight builds; disabled in App Store builds pending licensing review. Local LRC files work independently.")
                                 .font(.caption).foregroundColor(Tmi.textMedium)
                         }
                     }
                     .tint(Tmi.primary)
                     .disabled(!model.onlineLyricsAllowedInThisBuild)
                     if !model.onlineLyricsAllowedInThisBuild {
-                        Text("Online lyrics are disabled in this build.").font(.caption).foregroundColor(Tmi.warm)
+                        Text("Online lyrics are disabled in App Store builds.").font(.caption).foregroundColor(Tmi.warm)
                     }
                 }
 
@@ -110,7 +110,7 @@ struct HelpView: View {
                 HelpCard(title: "What works today",
                          body: "• Song recognition with Apple's ShazamKit (microphone)\n" +
                                "• Artist Wiki and Song Wiki from Wikipedia and Wikidata, with sources, caching and offline fallback\n" +
-                               "• Lyrics tab: import a local LRC file; online lyrics are debug-only for now\n" +
+                               "• Lyrics tab: import a local LRC file; online lyrics (LRCLIB) in TestFlight builds, switched on in Settings\n" +
                                "• History and favorites saved on this phone\n" +
                                "• Apple Music, Spotify and YouTube search links, and sharing\n" +
                                "• Album-art colors and blurred artwork background\n" +
@@ -124,7 +124,7 @@ struct HelpView: View {
                                "A song is shown only if its title and performer both match. If several records fit, you choose. " +
                                "If none fit, we say so instead of guessing.")
                 HelpCard(title: "Lyrics",
-                         body: "Online lyrics (LRCLIB) are switched off in public builds pending a licensing review. " +
+                         body: "Online lyrics (LRCLIB) work in TestFlight and debug builds (turn them on in Settings) and are switched off in App Store builds pending a licensing review. " +
                                "You can import your own .lrc or .txt file for a song from the Lyrics tab. Imported lyrics are kept only for this session.")
             }
             .padding(.horizontal, Tmi.screenPadding)

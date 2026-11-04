@@ -22,7 +22,7 @@ plus the on-demand lyrics work from `grok/integrated-lyrics`.
 | History + favorites, delete, clear, clear demo data | Room | JSON file (`LibraryStore`) |
 | Dynamic album-art theme + blurred artwork background | yes | yes (`Theme.swift`) |
 | Settings, privacy text, Setup guide | yes | yes |
-| Online lyrics (LRCLIB), default OFF, **debug builds only** pending licensing review | yes | yes (`#if DEBUG`; TestFlight/Release builds keep it off) |
+| Online lyrics (LRCLIB), default OFF, **debug builds only** (iOS also allows TestFlight) pending licensing review | yes | yes (allowed in debug **and TestFlight** builds; App Store builds keep it off) |
 | Local LRC import (session only) | button is a placeholder | working file picker |
 | Lyrics Lab (debug prototype for synced lyrics) | debug only | **not ported** |
 | Replaceable artwork slots (`slot_*.png`) | yes | **not ported** |

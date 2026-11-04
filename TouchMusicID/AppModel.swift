@@ -67,17 +67,24 @@ final class AppModel: ObservableObject {
         _demoMode = Published(initialValue: demo)
         _enableOnlineLyrics = Published(initialValue: online)
 
-        #if DEBUG
-        let allowOnline = true
-        #else
-        let allowOnline = false
-        #endif
+        let allowOnline = Self.onlineLyricsAllowed()
         let defaultsRef = defaults
         lyricsRepo = LyricsRepository(local: LocalLrcStore(), http: http, onlineAllowedInThisBuild: allowOnline,
                                       onlineEnabled: { defaultsRef.bool(forKey: Keys.onlineLyrics) })
 
         recognizer.onMatch = { [weak self] song, source in self?.matched(song, source) }
         refreshLibrary()
+    }
+
+    /// Online lyrics (LRCLIB) are allowed in debug builds and in TestFlight beta builds, so they can be tried on a phone.
+    /// A public App Store build keeps them off pending the licensing review (same gate as Android's release build).
+    private static func onlineLyricsAllowed() -> Bool {
+        #if DEBUG
+        return true
+        #else
+        // TestFlight installs carry a sandbox receipt; App Store installs carry a production receipt.
+        return Bundle.main.appStoreReceiptURL?.lastPathComponent == "sandboxReceipt"
+        #endif
     }
 
     // MARK: Listening
