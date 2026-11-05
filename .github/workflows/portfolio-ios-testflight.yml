@@ -19,6 +19,26 @@ on:
         description: "App name"
         required: true
         type: string
+      ios_project:
+        description: "Native Xcode project path; leave blank for Capacitor apps"
+        required: false
+        type: string
+        default: ""
+      ios_scheme:
+        description: "Native Xcode scheme (required when ios_project is set)"
+        required: false
+        type: string
+        default: ""
+      marketing_version:
+        description: "App version for native Xcode projects"
+        required: false
+        type: string
+        default: "1.0"
+      build_number:
+        description: "Build number for native Xcode projects"
+        required: false
+        type: string
+        default: "1"
 permissions:
   contents: read
 concurrency:
@@ -26,7 +46,6 @@ concurrency:
   cancel-in-progress: true
 env:
   TEAM_ID: 2M956232BT
-  MARKETING_VERSION: "1.0"
 jobs:
   build-and-upload:
     runs-on: macos-latest
@@ -38,10 +57,14 @@ jobs:
           repository: ${{ inputs.source_repository }}
           ref: ${{ inputs.source_ref }}
           path: app-source
+
       - uses: actions/setup-node@v4
+        if: ${{ inputs.ios_project == '' }}
         with:
           node-version: "20"
+
       - name: Generate iOS project
+        if: ${{ inputs.ios_project == '' }}
         working-directory: app-source
         run: |
           npm install
@@ -51,6 +74,7 @@ jobs:
           "$RUNNER_TEMP/venv/bin/pip" install pillow
           npx cap sync ios
           if [ -f tools/patch_ios.py ]; then "$RUNNER_TEMP/venv/bin/python" tools/patch_ios.py; fi
+
       - name: Write signing key
         env:
           API_PRIVATE_KEY: ${{ secrets.APPLE_SIGNING_PRIVATE_KEY }}
@@ -61,6 +85,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/private_keys"
           printf '%s' "$API_PRIVATE_KEY" > "$RUNNER_TEMP/private_keys/AuthKey_${API_KEY_ID}.p8"
           echo "API_KEY_PATH=$RUNNER_TEMP/private_keys/AuthKey_${API_KEY_ID}.p8" >> "$GITHUB_ENV"
+
       - name: Create export options
         run: |
           cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOT
@@ -73,27 +98,49 @@ jobs:
           <key>uploadSymbols</key><true/>
           </dict></plist>
           EOT
-      - name: Archive
+
+      - name: Archive native Xcode project
+        if: ${{ inputs.ios_project != '' }}
+        working-directory: app-source
+        env:
+          IOS_PROJECT: ${{ inputs.ios_project }}
+          IOS_SCHEME: ${{ inputs.ios_scheme }}
+          APP_VERSION: ${{ inputs.marketing_version }}
+          APP_BUILD_NUMBER: ${{ inputs.build_number }}
+        run: |
+          test -n "$IOS_SCHEME" || { echo "ios_scheme is required when ios_project is set"; exit 1; }
+          test -f "$IOS_PROJECT/project.pbxproj" || { echo "Xcode project not found: $IOS_PROJECT"; exit 1; }
+          [[ "$APP_BUILD_NUMBER" =~ ^[0-9]+$ ]] || { echo "build_number must contain digits only"; exit 1; }
+          xcodebuild archive -project "$IOS_PROJECT" -scheme "$IOS_SCHEME" -configuration Release -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/App.xcarchive" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO DEVELOPMENT_TEAM="$TEAM_ID" MARKETING_VERSION="$APP_VERSION" CURRENT_PROJECT_VERSION="$APP_BUILD_NUMBER" TARGETED_DEVICE_FAMILY=1
+
+      - name: Archive Capacitor project
+        if: ${{ inputs.ios_project == '' }}
         working-directory: app-source/ios/App
         run: |
           # capacitor.config.json supplies the App target bundle ID. Do not pass
           # PRODUCT_BUNDLE_IDENTIFIER globally: that would also overwrite nested
           # framework/resource targets and can create duplicate bundle IDs.
-          xcodebuild archive -workspace App.xcworkspace -scheme App -configuration Release -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/App.xcarchive" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO DEVELOPMENT_TEAM=$TEAM_ID MARKETING_VERSION=$MARKETING_VERSION CURRENT_PROJECT_VERSION=${{ github.run_number }} TARGETED_DEVICE_FAMILY=1
+          xcodebuild archive -workspace App.xcworkspace -scheme App -configuration Release -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/App.xcarchive" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO DEVELOPMENT_TEAM="$TEAM_ID" MARKETING_VERSION=1.0 CURRENT_PROJECT_VERSION=${{ github.run_number }} TARGETED_DEVICE_FAMILY=1
+
       - name: Export IPA
         env:
           API_KEY_ID: ${{ secrets.APPLE_SIGNING_KEY_ID }}
           ISSUER_ID: ${{ secrets.APPLE_SIGNING_ISSUER_ID }}
         run: |
           xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/App.xcarchive" -exportPath "$RUNNER_TEMP/export" -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" -allowProvisioningUpdates -authenticationKeyPath "$API_KEY_PATH" -authenticationKeyID "$API_KEY_ID" -authenticationKeyIssuerID "$ISSUER_ID"
+          IPA_PATH="$(find "$RUNNER_TEMP/export" -maxdepth 1 -type f -name '*.ipa' -print -quit)"
+          test -n "$IPA_PATH" || { echo "Xcode export produced no IPA"; exit 1; }
+          echo "UPLOAD_IPA=$IPA_PATH" >> "$GITHUB_ENV"
+
       - name: Upload to TestFlight
         uses: apple-actions/upload-testflight-build@v5
         with:
-          app-path: ${{ runner.temp }}/export/App.ipa
+          app-path: ${{ env.UPLOAD_IPA }}
           issuer-id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           api-key-id: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           api-private-key: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
           uses-non-exempt-encryption: "false"
           wait-for-processing: "true"
+
       - name: Report
-        run: echo "Processed ${{ inputs.app_name }} build ${{ github.run_number }}"
+        run: echo "Processed ${{ inputs.app_name }} version ${{ inputs.marketing_version }} build ${{ inputs.build_number }}"
