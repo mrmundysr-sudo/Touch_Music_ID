@@ -99,6 +99,15 @@ jobs:
           </dict></plist>
           EOT
 
+      - name: Generate XcodeGen project when needed
+        if: ${{ inputs.ios_project != '' }}
+        working-directory: app-source
+        run: |
+          if [ ! -f "${{ inputs.ios_project }}/project.pbxproj" ] && [ -f project.yml ]; then
+            brew install xcodegen
+            xcodegen generate
+          fi
+
       - name: Archive native Xcode project
         if: ${{ inputs.ios_project != '' }}
         working-directory: app-source
