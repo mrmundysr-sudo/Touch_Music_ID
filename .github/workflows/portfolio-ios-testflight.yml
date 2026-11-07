@@ -102,10 +102,15 @@ jobs:
       - name: Generate XcodeGen project when needed
         if: ${{ inputs.ios_project != '' }}
         working-directory: app-source
+        env:
+          IOS_PROJECT: ${{ inputs.ios_project }}
         run: |
-          if [ ! -f "${{ inputs.ios_project }}/project.pbxproj" ] && [ -f project.yml ]; then
-            brew install xcodegen
-            xcodegen generate
+          if [ ! -f "$IOS_PROJECT/project.pbxproj" ]; then
+            PROJECT_DIR="$(dirname "$IOS_PROJECT")"
+            if [ -f "$PROJECT_DIR/project.yml" ]; then
+              brew install xcodegen
+              (cd "$PROJECT_DIR" && xcodegen generate)
+            fi
           fi
 
       - name: Archive native Xcode project
