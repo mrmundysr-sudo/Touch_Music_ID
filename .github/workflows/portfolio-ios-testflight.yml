@@ -99,6 +99,17 @@ jobs:
           </dict></plist>
           EOT
 
+      - name: Apply App Store bundle ID to native project
+        if: ${{ inputs.ios_project != '' }}
+        working-directory: app-source
+        env:
+          IOS_BUNDLE_ID: ${{ inputs.bundle_id }}
+        run: |
+          test -f ios/project.yml || true
+          if [ -f ios/project.yml ]; then
+            sed -i.bak "s/com.mundymorning.touchweathertracker/$IOS_BUNDLE_ID/g" ios/project.yml
+          fi
+
       - name: Generate XcodeGen project when needed
         if: ${{ inputs.ios_project != '' }}
         working-directory: app-source
@@ -111,17 +122,6 @@ jobs:
               brew install xcodegen
               (cd "$PROJECT_DIR" && xcodegen generate)
             fi
-          fi
-
-      - name: Apply App Store bundle ID to native project
-        if: ${{ inputs.ios_project != '' }}
-        working-directory: app-source
-        env:
-          IOS_BUNDLE_ID: ${{ inputs.bundle_id }}
-        run: |
-          test -f ios/project.yml || true
-          if [ -f ios/project.yml ]; then
-            sed -i.bak "s/com.mundymorning.touchweathertracker/$IOS_BUNDLE_ID/g" ios/project.yml
           fi
 
       - name: Archive native Xcode project
