@@ -136,7 +136,7 @@ jobs:
           test -n "$IOS_SCHEME" || { echo "ios_scheme is required when ios_project is set"; exit 1; }
           test -f "$IOS_PROJECT/project.pbxproj" || { echo "Xcode project not found: $IOS_PROJECT"; exit 1; }
           [[ "$APP_BUILD_NUMBER" =~ ^[0-9]+$ ]] || { echo "build_number must contain digits only"; exit 1; }
-          xcodebuild archive -project "$IOS_PROJECT" -scheme "$IOS_SCHEME" -configuration Release -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/App.xcarchive" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO DEVELOPMENT_TEAM="$TEAM_ID" MARKETING_VERSION="$APP_VERSION" CURRENT_PROJECT_VERSION="$APP_BUILD_NUMBER" TARGETED_DEVICE_FAMILY=1
+          xcodebuild archive -project "$IOS_PROJECT" -scheme "$IOS_SCHEME" -configuration Release -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/App.xcarchive" CODE_SIGNING_ALLOWED=YES CODE_SIGNING_REQUIRED=YES DEVELOPMENT_TEAM="$TEAM_ID" MARKETING_VERSION="$APP_VERSION" CURRENT_PROJECT_VERSION="$APP_BUILD_NUMBER" TARGETED_DEVICE_FAMILY=1
 
       - name: Archive Capacitor project
         if: ${{ inputs.ios_project == '' }}
