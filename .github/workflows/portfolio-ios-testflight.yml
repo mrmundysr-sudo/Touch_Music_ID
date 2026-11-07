@@ -110,6 +110,9 @@ jobs:
             sed -i.bak "s/com.mundymorning.touchweathertracker/$IOS_BUNDLE_ID/g" ios/project.yml
             APP_GROUP="group.$IOS_BUNDLE_ID"
             sed -i.bak "s/group.com.mundymorning.touchweathertracker/$APP_GROUP/g" ios/project.yml
+            # This existing App Store record has no registered App Group capability.
+            # Omit the optional group entitlement so automatic profiles match.
+            sed -i.bak '/com.apple.security.application-groups:/d' ios/project.yml
           fi
 
       - name: Generate XcodeGen project when needed
