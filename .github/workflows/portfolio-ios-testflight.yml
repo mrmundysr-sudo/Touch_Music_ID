@@ -108,6 +108,8 @@ jobs:
           test -f ios/project.yml || true
           if [ -f ios/project.yml ]; then
             sed -i.bak "s/com.mundymorning.touchweathertracker/$IOS_BUNDLE_ID/g" ios/project.yml
+            APP_GROUP="group.$IOS_BUNDLE_ID"
+            sed -i.bak "s/group.com.mundymorning.touchweathertracker/$APP_GROUP/g" ios/project.yml
           fi
 
       - name: Generate XcodeGen project when needed
